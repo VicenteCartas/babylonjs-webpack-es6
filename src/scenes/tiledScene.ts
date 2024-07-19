@@ -1,11 +1,10 @@
-import { Engine } from "@babylonjs/core/Engines/engine";
 import { Scene } from "@babylonjs/core/scene";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { Color4 } from "@babylonjs/core";
+import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 
-//import "@babylonjs/core/Loading/loadingScreen";
 import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
 
 import { CreateSceneClass } from "../createScene";
@@ -14,10 +13,11 @@ import cityTilEdMap from "../../assets/cityMap.tmx";
 import worldTilEdMap from "../../assets/worldMap.tmx";
 import { debugTileset, tilEdMapToSpriteMap } from "../tiled/tilEdMapToSpriteMap";
 
-export class FhlScene implements CreateSceneClass {
+
+export class TiledScene implements CreateSceneClass {
 
     createScene = async (
-        engine: Engine,
+        engine: AbstractEngine,
         canvas: HTMLCanvasElement
     ): Promise<Scene> => {
         // This creates a basic Babylon Scene object (non-mesh)
@@ -43,9 +43,10 @@ export class FhlScene implements CreateSceneClass {
         light.intensity = 0.7;
 
         tilEdMapToSpriteMap(cityTilEdMap.map, scene);
+        tilEdMapToSpriteMap(worldTilEdMap.map, scene);
 
         return scene;
     };
 }
 
-export default new FhlScene();
+export default new TiledScene();

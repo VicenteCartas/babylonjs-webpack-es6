@@ -1,4 +1,4 @@
-import { Scene, SpriteMap, Texture, Vector2 } from "@babylonjs/core";
+import { RandomGUID, Scene, SpriteMap, Texture, Vector2 } from "@babylonjs/core";
 import { TilEdLayerData, TilEdMap, TilEdTileset } from "../types/tiled.types";
 import { AtlasJson, AtlasJsonFrame } from "../types/atlasjson.types";
 
@@ -57,7 +57,7 @@ export function tilEdMapToSpriteMap(map: TilEdMap, scene: Scene) : SpriteMap {
 
    // Create the sprite map
    const spriteMap = new SpriteMap(
-       'TilEdMap',
+       'TilEdMap' + RandomGUID(),
        atlasJson,
        spriteSheet,
        {
