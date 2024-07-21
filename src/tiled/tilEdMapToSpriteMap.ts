@@ -1,5 +1,5 @@
 import { RandomGUID, Scene, SpriteMap, Texture, Vector2 } from "@babylonjs/core";
-import { TilEdLayerData, TilEdMap, TilEdTileset } from "../types/tiled.types";
+import { TilEdLayerData, TilEdMap, TilEdTileset } from "./tiledOld.types";
 import { AtlasJson, AtlasJsonFrame } from "../types/atlasjson.types";
 
 export function debugTileset(map: TilEdMap, scene: Scene) : void {

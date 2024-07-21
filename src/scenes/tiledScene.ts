@@ -9,9 +9,15 @@ import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
 
 import { CreateSceneClass } from "../createScene";
 
+// digital assets
+import controllerModel from "../../assets/glb/samsung-controller.glb";
+import roomEnvironment from "../../assets/environment/room.env"
+
 import cityTilEdMap from "../../assets/cityMap.tmx";
 import worldTilEdMap from "../../assets/worldMap.tmx";
+import hexagonalMap from "../../assets/HexagonalMap.tmx";
 import { debugTileset, tilEdMapToSpriteMap } from "../tiled/tilEdMapToSpriteMap";
+import { TiledImporter } from "../tiled/tilEdImporter";
 
 
 export class TiledScene implements CreateSceneClass {
@@ -42,8 +48,13 @@ export class TiledScene implements CreateSceneClass {
         const light = new PointLight("Point", new Vector3(5, 10, 5), scene);
         light.intensity = 0.7;
 
-        tilEdMapToSpriteMap(cityTilEdMap.map, scene);
-        tilEdMapToSpriteMap(worldTilEdMap.map, scene);
+        // tilEdMapToSpriteMap(hexagonalMap.map, scene);
+        // tilEdMapToSpriteMap(hexagonalMap.map, scene);
+        // tilEdMapToSpriteMap(worldTilEdMap.map, scene);
+
+        //TiledImporter.ImportMapAsync(hexagonalMap, scene);
+        TiledImporter.ImportMapAsync(cityTilEdMap, scene);
+        //TiledImporter.ImportMapAsync(worldTilEdMap, scene);
 
         return scene;
     };

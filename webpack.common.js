@@ -41,21 +41,13 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
-                test: /\.(png|jpg|gif|env|glb|gltf|stl)$/i,
+                test: /\.(png|jpg|gif|env|glb|gltf|stl|tmx|tsx2)$/i,
                 use: [
                     {
                         loader: "url-loader",
                         options: {
                             limit: 8192,
                         },
-                    },
-                ],
-            },
-            {
-                test: /\.(tmx)$/i,
-                use: [
-                    {
-                        loader: "xml-loader"
                     },
                 ],
             },
