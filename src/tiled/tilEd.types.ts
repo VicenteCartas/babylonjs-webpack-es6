@@ -23,7 +23,26 @@ export class TilEdMap {
 }
 
 export class TilEdTileset {
+    name: string = '';
+    tileWidth: number = 0;
+    tileHeight: number = 0;
+    spacing: number = 0;
+    margin: number = 0;
+    tileCount: number = 0;
+    columns: number = 0;
+    image?: TilEdTilesetImage;
+    tiles?: TilEdTilesetTile[];
+}
 
+export class TilEdTilesetImage {
+    source: string = '';
+    width: number = 0;
+    height: number = 0;
+}
+
+export class TilEdTilesetTile {
+    id: number = 0;
+    image: TilEdTilesetImage = new TilEdTilesetImage();
 }
 
 export class TilEdLayer {

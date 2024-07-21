@@ -17,7 +17,7 @@ import cityTilEdMap from "../../assets/cityMap.tmx";
 import worldTilEdMap from "../../assets/worldMap.tmx";
 import hexagonalMap from "../../assets/HexagonalMap.tmx";
 import { debugTileset, tilEdMapToSpriteMap } from "../tiled/tilEdMapToSpriteMap";
-import { TiledImporter } from "../tiled/tilEdImporter";
+import { TilEdImporter } from "../tiled/tilEdImporter";
 
 
 export class TiledScene implements CreateSceneClass {
@@ -53,7 +53,7 @@ export class TiledScene implements CreateSceneClass {
         // tilEdMapToSpriteMap(worldTilEdMap.map, scene);
 
         //TiledImporter.ImportMapAsync(hexagonalMap, scene);
-        TiledImporter.ImportMapAsync(cityTilEdMap, scene);
+        TilEdImporter.ImportMapAsync(cityTilEdMap, scene);
         //TiledImporter.ImportMapAsync(worldTilEdMap, scene);
 
         return scene;

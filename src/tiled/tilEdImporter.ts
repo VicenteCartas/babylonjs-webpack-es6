@@ -2,9 +2,9 @@ import { Scene } from "@babylonjs/core";
 import { TilEdMap } from "./tilEd.types";
 import { TilEdParser } from "./tilEdParser";
 
-export class TiledImporter {
+export class TilEdImporter {
     public static async ImportMapAsync(rootUrl: string, scene: Scene): Promise<TilEdMap> {
-        const mapData = await TiledImporter.requestMap(rootUrl);
+        const mapData = await TilEdImporter.requestMap(rootUrl);
         return TilEdParser.parseMapData(mapData);
     }
 
