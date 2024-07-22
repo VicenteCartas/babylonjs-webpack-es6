@@ -52,9 +52,9 @@ export class TiledScene implements CreateSceneClass {
         // tilEdMapToSpriteMap(hexagonalMap.map, scene);
         // tilEdMapToSpriteMap(worldTilEdMap.map, scene);
 
-        TilEdImporter.ImportMapAsync(hexagonalMap, scene);
-        //TilEdImporter.ImportMapAsync(cityTilEdMap, scene);
+        TilEdImporter.ImportMapAsync(cityTilEdMap, scene);
         //TilEdImporter.ImportMapAsync(worldTilEdMap, scene);
+        //TilEdImporter.ImportMapAsync(hexagonalMap, scene);
 
         return scene;
     };
