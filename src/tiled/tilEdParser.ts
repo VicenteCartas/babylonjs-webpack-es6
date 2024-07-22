@@ -11,9 +11,10 @@ import {
     TilEdTilesetImage,
     TilEdTilesetTile
 } from "./tilEd.types";
+import { FileUtilities } from "./fileUtilities";
 
 export class TilEdParser {
-    public static parseMapData(mapData: string) : TilEdMap {
+    public static async parseMapData(mapData: string) : Promise<TilEdMap> {
         // https://gist.github.com/prof3ssorSt3v3/61ccf69758cd6dbdc429934564864650
         let parser = new DOMParser();
         let xmlData = parser.parseFromString(mapData, 'application/xml');
@@ -22,20 +23,20 @@ export class TilEdParser {
         const map = new TilEdMap();
 
         // Parse the map data
-        map.version = mapNode.getAttribute('version') ?? '';
-        map.tiledVersion = mapNode.getAttribute('tiledversion');
+        map.version = this.parseStringAttribute(mapNode, 'version');
+        map.tiledVersion = this.parseStringAttribute(mapNode, 'tiledversion');
         map.orientation = this.parseStringAttribute(mapNode, 'orientation') as TilEdMapOrientation;
         map.renderorder = this.parseStringAttribute(mapNode, 'renderorder') as TilEdMapRenderOrder;
         map.width = this.parseNumberAttribute(mapNode, 'width');
         map.height = this.parseNumberAttribute(mapNode, 'height');
         map.tileWidth = this.parseNumberAttribute(mapNode, 'tilewidth');
         map.tileHeight = this.parseNumberAttribute(mapNode, 'tileheight');
-        map.hexSideLength = this.parseNumberAttribute(mapNode, 'hexsidelength');
-        map.staggerAxis = this.parseStringAttribute(mapNode, 'staggeraxis') as TilEdMapStaggerAxis;
-        map.staggerIndex = this.parseStringAttribute(mapNode, 'staggerindex') as TilEdMapStaggerIndex;
+        map.hexSideLength = this.parseOptionalNumberAttribute(mapNode, 'hexsidelength');
+        map.staggerAxis = mapNode.getAttribute('staggeraxis') as TilEdMapStaggerAxis;
+        map.staggerIndex = mapNode.getAttribute('staggerindex') as TilEdMapStaggerIndex;
 
         // Parse all tilesets
-        map.tilesets = this.parseTilesets(mapNode);
+        map.tilesets = await this.parseTilesets(mapNode);
 
         // Parse all layers
         map.layers = this.parseLayers(mapNode);
@@ -43,7 +44,7 @@ export class TilEdParser {
         return map;
     }
 
-    private static parseTilesets(mapElement: HTMLElement) : TilEdTileset[] {
+    private static async parseTilesets(mapElement: HTMLElement) : Promise<TilEdTileset[]> {
         const tilesets: TilEdTileset[] = [];
         const tilesetElements = mapElement.getElementsByTagName('tileset');
 
@@ -51,7 +52,7 @@ export class TilEdParser {
             for (let i = 0; i < tilesetElements.length; i++) {
                 const tilesetElement = tilesetElements.item(i);
                 if (tilesetElement) {
-                    tilesets.push(TilEdParser.parseTileset(tilesetElement));
+                    tilesets.push(await TilEdParser.parseTileset(tilesetElement));
                 }
             }
         }
@@ -59,22 +60,33 @@ export class TilEdParser {
         return tilesets;
     }
 
-    private static parseTileset(tilesetElement: Element): TilEdTileset {
+    private static async parseTileset(tilesetElement: Element): Promise<TilEdTileset> {
         const tileset = new TilEdTileset();
 
         // Test if tileset is local or not
+        const source = tilesetElement.getAttribute('source');
+        if (source) {
+            tilesetElement = await TilEdParser.parseRemoteTileset(source);
+        }
 
         tileset.name = TilEdParser.parseStringAttribute(tilesetElement, 'name');
         tileset.tileWidth = TilEdParser.parseNumberAttribute(tilesetElement, 'tilewidth');
         tileset.tileHeight = TilEdParser.parseNumberAttribute(tilesetElement, 'tileheight');
-        tileset.spacing = TilEdParser.parseNumberAttribute(tilesetElement, 'spacing');
-        tileset.margin = TilEdParser.parseNumberAttribute(tilesetElement, 'margin');
+        tileset.spacing = TilEdParser.parseNumberAttribute(tilesetElement, 'spacing', 0);
+        tileset.margin = TilEdParser.parseNumberAttribute(tilesetElement, 'margin', 0);
         tileset.tileCount = TilEdParser.parseNumberAttribute(tilesetElement, 'tilecount');
         tileset.columns = TilEdParser.parseNumberAttribute(tilesetElement, 'columns');
         tileset.image = TilEdParser.parseTilesetImage(tilesetElement.getElementsByTagName('image'));
         tileset.tiles = TilEdParser.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'));
 
         return tileset;
+    }
+
+    private static async parseRemoteTileset(tilesetUrl: string) : Promise<Element>{
+        const tilesetData = await FileUtilities.requestFile(tilesetUrl);
+        let parser = new DOMParser();
+        let xmlData = parser.parseFromString(tilesetData, 'application/xml');
+        return xmlData.documentElement;
     }
 
     private static parseTilesetImage(imageElements: HTMLCollection) : TilEdTilesetImage | undefined {
@@ -136,11 +148,11 @@ export class TilEdParser {
         layer.name = TilEdParser.parseStringAttribute(layerElement, 'name');
         layer.width = TilEdParser.parseNumberAttribute(layerElement, 'width');
         layer.height = TilEdParser.parseNumberAttribute(layerElement, 'height');
-        layer.opacity = TilEdParser.parseNumberAttribute(layerElement, 'opacity');
-        layer.visible = TilEdParser.parseBooleanAttribute(layerElement, 'visible');
-        layer.tintColor = TilEdParser.parseColor4Attribute(layerElement, 'visible');
-        layer.offsetX = TilEdParser.parseNumberAttribute(layerElement, 'offsetx');
-        layer.offsetY = TilEdParser.parseNumberAttribute(layerElement, 'offsety');
+        layer.opacity = TilEdParser.parseNumberAttribute(layerElement, 'opacity', 1);
+        layer.visible = TilEdParser.parseBooleanAttribute(layerElement, 'visible', true);
+        layer.tintColor = TilEdParser.parseOptionalColor4Attribute(layerElement, 'visible');
+        layer.offsetX = TilEdParser.parseNumberAttribute(layerElement, 'offsetx', 0);
+        layer.offsetY = TilEdParser.parseNumberAttribute(layerElement, 'offsety', 0);
 
         // Read the layer data
         const dataElement = layerElement.getElementsByTagName('data').item(0);
@@ -191,8 +203,13 @@ export class TilEdParser {
         return textValue;
     }
 
-    private static parseBooleanAttribute(element: Element, name: string) : boolean {
-        const number = TilEdParser.parseNumberAttribute(element, name);
+    private static parseBooleanAttribute(element: Element, name: string, valueIfMissing: boolean) : boolean {
+        const number = TilEdParser.parseOptionalNumberAttribute(element, name);
+
+        if (number === undefined) {
+            return valueIfMissing;
+        }
+
         if (number === 0) {
             return false;
         }
@@ -200,26 +217,42 @@ export class TilEdParser {
         return true;
     }
 
-    private static parseNumberAttribute(element: Element, name: string) : number {
+    private static parseOptionalNumberAttribute(element: Element, name: string) : number | undefined {
         let textValue = element.getAttribute(name);
         let numberValue = 0;
 
-        if (textValue) {
-            numberValue = parseInt(textValue);
+        if (!textValue) {
+            return undefined;
         }
 
-        if (Number.isNaN(numberValue) || !textValue) {
-            throw new Error('Error parsing attribute ' + name + ' from node: ' + element.nodeName);
+        numberValue = parseInt(textValue);
+
+        if (Number.isNaN(numberValue)) {
+            throw new Error(`Attribute ${name} in node ${element.nodeName} was not a number, but instead ${textValue}`);
         }
 
         return numberValue;
     }
 
-    private static parseColor4Attribute(element: Element, name: string) : Color4 {
+    private static parseNumberAttribute(element: Element, name: string, valueIfMissing?: number) : number {
+        let result = TilEdParser.parseOptionalNumberAttribute(element, name);
+
+        if (result === undefined) {
+            if (valueIfMissing === undefined) {
+                throw new Error(`Attribute ${name} could not be found in node ${element.nodeName}`);
+            } else {
+                result = valueIfMissing;
+            }
+        }
+
+        return result;
+    }
+
+    private static parseOptionalColor4Attribute(element: Element, name: string) : Color4 | undefined {
         let textValue = element.getAttribute(name);
 
         if (!textValue) {
-            throw new Error('Error parsing attribute ' + name + ' from node: ' + element.nodeName);
+            return undefined;
         }
 
         if (textValue.charAt(0) === '#') {
