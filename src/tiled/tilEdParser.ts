@@ -14,7 +14,7 @@ import {
 import { FileUtilities } from "./fileUtilities";
 
 export class TilEdParser {
-    public static async parseMapData(mapData: string) : Promise<TilEdMap> {
+    public static async parseMapData(mapData: string, rootUrl: URL) : Promise<TilEdMap> {
         // https://gist.github.com/prof3ssorSt3v3/61ccf69758cd6dbdc429934564864650
         let parser = new DOMParser();
         let xmlData = parser.parseFromString(mapData, 'application/xml');
@@ -36,7 +36,7 @@ export class TilEdParser {
         map.staggerIndex = mapNode.getAttribute('staggerindex') as TilEdMapStaggerIndex;
 
         // Parse all tilesets
-        map.tilesets = await this.parseTilesets(mapNode);
+        map.tilesets = await this.parseTilesets(mapNode, rootUrl);
 
         // Parse all layers
         map.layers = this.parseLayers(mapNode);
@@ -44,7 +44,7 @@ export class TilEdParser {
         return map;
     }
 
-    private static async parseTilesets(mapElement: HTMLElement) : Promise<TilEdTileset[]> {
+    private static async parseTilesets(mapElement: HTMLElement, rootUrl: URL) : Promise<TilEdTileset[]> {
         const tilesets: TilEdTileset[] = [];
         const tilesetElements = mapElement.getElementsByTagName('tileset');
 
@@ -52,7 +52,7 @@ export class TilEdParser {
             for (let i = 0; i < tilesetElements.length; i++) {
                 const tilesetElement = tilesetElements.item(i);
                 if (tilesetElement) {
-                    tilesets.push(await TilEdParser.parseTileset(tilesetElement));
+                    tilesets.push(await TilEdParser.parseTileset(tilesetElement, rootUrl));
                 }
             }
         }
@@ -60,13 +60,13 @@ export class TilEdParser {
         return tilesets;
     }
 
-    private static async parseTileset(tilesetElement: Element): Promise<TilEdTileset> {
+    private static async parseTileset(tilesetElement: Element, rootUrl: URL): Promise<TilEdTileset> {
         const tileset = new TilEdTileset();
 
         // Test if tileset is local or not
         const source = tilesetElement.getAttribute('source');
         if (source) {
-            tilesetElement = await TilEdParser.parseRemoteTileset(source);
+            tilesetElement = await TilEdParser.parseRemoteTileset(source, rootUrl);
         }
 
         tileset.name = TilEdParser.parseStringAttribute(tilesetElement, 'name');
@@ -76,25 +76,25 @@ export class TilEdParser {
         tileset.margin = TilEdParser.parseNumberAttribute(tilesetElement, 'margin', 0);
         tileset.tileCount = TilEdParser.parseNumberAttribute(tilesetElement, 'tilecount');
         tileset.columns = TilEdParser.parseNumberAttribute(tilesetElement, 'columns');
-        tileset.image = TilEdParser.parseTilesetImage(tilesetElement.getElementsByTagName('image'));
-        tileset.tiles = TilEdParser.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'));
+        tileset.image = TilEdParser.parseTilesetImage(tilesetElement.getElementsByTagName('image'), rootUrl);
+        tileset.tiles = TilEdParser.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'), rootUrl);
 
         return tileset;
     }
-
-    private static async parseRemoteTileset(tilesetUrl: string) : Promise<Element>{
-        const tilesetData = await FileUtilities.requestFile(tilesetUrl);
+ 
+    private static async parseRemoteTileset(tilesetUrl: string, rootUrl: URL) : Promise<Element>{
+        const tilesetData = await FileUtilities.requestFile(new URL(tilesetUrl, rootUrl));
         let parser = new DOMParser();
         let xmlData = parser.parseFromString(tilesetData, 'application/xml');
         return xmlData.documentElement;
     }
 
-    private static parseTilesetImage(imageElements: HTMLCollection) : TilEdTilesetImage | undefined {
+    private static parseTilesetImage(imageElements: HTMLCollection, rootUrl: URL) : TilEdTilesetImage | undefined {
         if (imageElements.length > 0) {
             const imageElement = imageElements.item(0);
             if (imageElement) {
                 const tilesetImage = new TilEdTilesetImage();
-                tilesetImage.source = TilEdParser.parseStringAttribute(imageElement, 'source');;
+                tilesetImage.source = new URL(TilEdParser.parseStringAttribute(imageElement, 'source'), rootUrl);
                 tilesetImage.width = TilEdParser.parseNumberAttribute(imageElement, 'width'); 
                 tilesetImage.height = TilEdParser.parseNumberAttribute(imageElement, 'height');
 
@@ -105,14 +105,14 @@ export class TilEdParser {
         return undefined;
     }
 
-    private static parseTilesetTiles(tileElements: HTMLCollection) : TilEdTilesetTile[] | undefined {
+    private static parseTilesetTiles(tileElements: HTMLCollection, rootUrl: URL) : TilEdTilesetTile[] | undefined {
         const tiles: TilEdTilesetTile[] = [];
         for (let i = 0; i < tileElements.length; i++) {
             const tileElement = tileElements.item(0);
             if (tileElement) {
                 const tile = new TilEdTilesetTile();
                 tile.id = TilEdParser.parseNumberAttribute(tileElement, 'id');
-                tile.image = TilEdParser.parseTilesetImage(tileElement.getElementsByTagName('image')) as TilEdTilesetImage; 
+                tile.image = TilEdParser.parseTilesetImage(tileElement.getElementsByTagName('image'), rootUrl) as TilEdTilesetImage; 
 
                 tiles.push(tile);
             }

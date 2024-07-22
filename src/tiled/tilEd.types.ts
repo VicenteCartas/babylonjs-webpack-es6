@@ -35,7 +35,7 @@ export class TilEdTileset {
 }
 
 export class TilEdTilesetImage {
-    source: string = '';
+    source: URL = new URL('https://www.babylonjs.com/');
     width: number = 0;
     height: number = 0;
 }

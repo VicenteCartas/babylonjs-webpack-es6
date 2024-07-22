@@ -5,9 +5,10 @@ import { FileUtilities } from "./fileUtilities";
 
 export class TilEdImporter {
     public static async ImportMapAsync(rootUrl: string, scene: Scene): Promise<TilEdMap> {
-        const mapData = await FileUtilities.requestFile(rootUrl);
+        const url = new URL(rootUrl);
+        const mapData = await FileUtilities.requestFile(url);
         console.log(mapData);
-        const mapObject = await TilEdParser.parseMapData(mapData);
+        const mapObject = await TilEdParser.parseMapData(mapData, url);
         console.log(mapObject);
         return mapObject;
     }

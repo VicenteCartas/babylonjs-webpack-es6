@@ -1,5 +1,5 @@
 export class FileUtilities {
-    public static async requestFile(url: string): Promise<string> {
+    public static async requestFile(url: URL): Promise<string> {
         // TODO: Use Babylon fileTools.ts -> RequestFile
         // TODO: check xmlLoader.ts
     

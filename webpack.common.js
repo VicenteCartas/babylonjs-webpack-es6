@@ -41,12 +41,12 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
-                test: /\.(png|jpg|gif|env|glb|gltf|stl|tmx|tsx2)$/i,
+                test: /\.(png|jpg|gif|env|glb|gltf|stl|tmx|tlx)$/i,
                 use: [
                     {
                         loader: "file-loader",
                         options: {
-                            name: '[path][name].[ext]',
+                            name: '[name].[ext]',
                         },
                     },
                 ],
