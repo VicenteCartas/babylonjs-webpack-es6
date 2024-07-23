@@ -38,11 +38,13 @@ export class TilEdScene implements CreateSceneClass {
         const light = new PointLight("Point", new Vector3(5, 10, 5), scene);
         light.intensity = 0.7;
 
-        const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/cityMap.tmx', scene);
-        TilEdRenderer.DebugImageTileset(map.tilesets[0], scene);
+        //const cityMap = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/cityMap.tmx', scene);
+        //const worldMap = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/worldMap.tmx', scene);
+        const hexMap = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/HexagonalMap.tmx', scene);
+
+        TilEdRenderer.DebugImageTileset(hexMap.tilesets[0], scene);
         //TilEdRenderer.RenderTilemap(map, scene);
-        //TilEdImporter.ImportMapAsync(worldTilEdMap, scene);
-        //TilEdImporter.ImportMapAsync(hexagonalMap, scene);
+        
 
         return scene;
     };

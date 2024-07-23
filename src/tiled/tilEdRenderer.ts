@@ -5,7 +5,7 @@ import { AtlasJson, AtlasJsonFrame } from "../types/atlasjson.types";
 export class TilEdRenderer {
     public static DebugImageTileset(tileset: TilEdTileset, scene: Scene) : SpriteMap {
         // Create the JSON atlas to map from the TilEd tileset to the BabylonJS SpriteMap
-        const atlasJson = TilEdRenderer.TilesetToAtlasJson(tileset, "1");
+        const atlasJson = TilEdRenderer.TilesetToAtlasJson(tileset);
 
         // Load the spritesheet (with appropriate settings) associated with the JSON Atlas.
         const spriteSheet = new Texture(tileset.image!.source.toString(), scene,
@@ -51,53 +51,9 @@ export class TilEdRenderer {
         return undefined;
     }
 
-    private static TilesetToAtlasJson(tileset: TilEdTileset, version: string): AtlasJson {
-        const imageHeight = tileset.image!.height;
-        const rows = tileset.image!.height / tileset.tileHeight;
-        const columns = tileset.image!.width / tileset.tileWidth;
-        const tileWidth = tileset.tileWidth;
-        const tileHeight = tileset.tileHeight;
-        
-        let tileCount = 1;
-        const atlasJsonFrames: AtlasJsonFrame[] = [];
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < columns; j++ ) {
-                const frame: AtlasJsonFrame = {
-                    filename: tileCount + ".png",
-                    frame: { x: j * tileWidth, y: imageHeight - (i + 1) * tileHeight, w: tileWidth, h: tileHeight  },
-                    rotated: false,
-                    trimmed: false,
-                    spriteSourceSize: { x: 0, y: 0, w: tileWidth, h: tileHeight },
-                    sourceSize: { w: tileWidth, h: tileHeight }
-                }
-    
-                atlasJsonFrames.push(frame);
-                tileCount++;
-            }
-        }
-    
-        const atlasJson: AtlasJson = {
-            frames: atlasJsonFrames,
-            meta: {
-                app: "https://www.mapeditor.org/",
-                version: version,
-                image: tileset.image!.source.toString(),
-                format:"RGBA8888",
-                size: {
-                    w: tileset.image!.width,
-                    h: tileset.image!.height
-                },
-                scale: 1,
-                smartupdate: ""
-            }
-        }
-    
-        return atlasJson;
-    }
-
     private static RenderOrthogonalMap(map: TilEdMap, scene: Scene) : SpriteMap {
         // Create the JSON atlas to map from the TilEd tileset to the BabylonJS SpriteMap
-        const atlasJson = TilEdRenderer.TilesetToAtlasJson(map.tilesets[0], map.version);
+        const atlasJson = TilEdRenderer.TilesetToAtlasJson(map.tilesets[0]);
 
         // Load the spritesheet (with appropriate settings) associated with the JSON Atlas.
         const spriteSheet = new Texture(map.tilesets[0].image!.source.toString(), scene,
@@ -148,5 +104,93 @@ export class TilEdRenderer {
         }
 
         return spriteMap;
+    }
+
+    private static TilesetToAtlasJson(tileset: TilEdTileset) : AtlasJson {
+        if (tileset.image !== undefined) {
+            return TilEdRenderer.ImageTilesetToAtlasJson(tileset);
+        } else if (tileset.tiles !== undefined && tileset.tiles.length > 0) {
+            return TilEdRenderer.TilesTilesetToAtlasJson(tileset);
+        }
+
+        throw new Error(`Invalid tileset: ${tileset.name}`);
+    }
+
+    private static ImageTilesetToAtlasJson(tileset: TilEdTileset): AtlasJson {
+        const image = tileset.image!;
+        const rows = image.height / tileset.tileHeight;
+        const columns = image.width / tileset.tileWidth;
+        
+        let tileCount = 1;
+        const atlasJsonFrames: AtlasJsonFrame[] = [];
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < columns; j++ ) {
+                const frame: AtlasJsonFrame = {
+                    filename: tileCount + ".png",
+                    frame: { x: j * tileset.tileWidth, y: image.height - (i + 1) * tileset.tileHeight, w: tileset.tileWidth, h: tileset.tileHeight  },
+                    rotated: false,
+                    trimmed: false,
+                    spriteSourceSize: { x: 0, y: 0, w: tileset.tileWidth, h: tileset.tileHeight },
+                    sourceSize: { w: tileset.tileWidth, h: tileset.tileHeight }
+                }
+    
+                atlasJsonFrames.push(frame);
+                tileCount++;
+            }
+        }
+    
+        const atlasJson: AtlasJson = {
+            frames: atlasJsonFrames,
+            meta: {
+                app: "https://www.mapeditor.org/",
+                version: "1",
+                image: image.source.toString(),
+                format:"RGBA8888",
+                size: {
+                    w: image.width,
+                    h: image.height
+                },
+                scale: 1,
+                smartupdate: ""
+            }
+        }
+    
+        return atlasJson;
+    }
+
+    private static TilesTilesetToAtlasJson(tileset: TilEdTileset): AtlasJson {
+        const tiles = tileset.tiles!;
+        const atlasJsonFrames: AtlasJsonFrame[] = [];
+        for (let i = 0; i < tiles.length; i++) {
+            const imageName = tiles[i].image.source.toString();
+            const frame: AtlasJsonFrame = {
+                filename: imageName.slice(imageName.lastIndexOf('/')),
+                frame: { x: i * tileset.tileWidth, y: 0, w: tileset.tileWidth, h: tileset.tileHeight  },
+                rotated: false,
+                trimmed: false,
+                spriteSourceSize: { x: 0, y: 0, w: tileset.tileWidth, h: tileset.tileHeight },
+                sourceSize: { w: tileset.tileWidth, h: tileset.tileHeight }
+            };
+
+            atlasJsonFrames.push(frame);
+        }
+    
+        const atlasJson: AtlasJson = {
+            frames: atlasJsonFrames,
+            meta: {
+                app: "https://www.mapeditor.org/",
+                version: "1",
+                image: RandomGUID() + ".png",
+                format:"RGBA8888",
+                size: {
+                    w: tiles.length * tileset.tileWidth,
+                    h: tileset.tileHeight
+                },
+                scale: 1,
+                smartupdate: ""
+            }
+        }
+
+        return atlasJson;
     }
 }

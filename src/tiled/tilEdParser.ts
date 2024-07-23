@@ -76,7 +76,7 @@ export class TilEdParser {
         tileset.margin = TilEdParser.parseNumberAttribute(tilesetElement, 'margin', 0);
         tileset.tileCount = TilEdParser.parseNumberAttribute(tilesetElement, 'tilecount');
         tileset.columns = TilEdParser.parseNumberAttribute(tilesetElement, 'columns');
-        tileset.image = TilEdParser.parseTilesetImage(tilesetElement.getElementsByTagName('image'), rootUrl);
+        tileset.image = TilEdParser.parseTilesetImage(tilesetElement.children.item(0), rootUrl);
         tileset.tiles = TilEdParser.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'), rootUrl);
 
         return tileset;
@@ -89,14 +89,13 @@ export class TilEdParser {
         return xmlData.documentElement;
     }
 
-    private static parseTilesetImage(imageElements: HTMLCollection, rootUrl: URL) : TilEdTilesetImage | undefined {
-        if (imageElements.length > 0) {
-            const imageElement = imageElements.item(0);
-            if (imageElement) {
+    private static parseTilesetImage(element: Element | null, rootUrl: URL) : TilEdTilesetImage | undefined {
+        if (element && element.tagName == 'image') {
+            if (element) {
                 const tilesetImage = new TilEdTilesetImage();
-                tilesetImage.source = new URL(TilEdParser.parseStringAttribute(imageElement, 'source'), rootUrl);
-                tilesetImage.width = TilEdParser.parseNumberAttribute(imageElement, 'width'); 
-                tilesetImage.height = TilEdParser.parseNumberAttribute(imageElement, 'height');
+                tilesetImage.source = new URL(TilEdParser.parseStringAttribute(element, 'source'), rootUrl);
+                tilesetImage.width = TilEdParser.parseNumberAttribute(element, 'width'); 
+                tilesetImage.height = TilEdParser.parseNumberAttribute(element, 'height');
 
                 return tilesetImage;
             }
@@ -112,7 +111,7 @@ export class TilEdParser {
             if (tileElement) {
                 const tile = new TilEdTilesetTile();
                 tile.id = TilEdParser.parseNumberAttribute(tileElement, 'id');
-                tile.image = TilEdParser.parseTilesetImage(tileElement.getElementsByTagName('image'), rootUrl) as TilEdTilesetImage; 
+                tile.image = TilEdParser.parseTilesetImage(tileElement.children.item(0), rootUrl) as TilEdTilesetImage; 
 
                 tiles.push(tile);
             }
