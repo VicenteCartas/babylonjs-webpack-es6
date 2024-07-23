@@ -11,7 +11,7 @@ import { CreateSceneClass } from "../createScene";
 import { TilEdImporter } from "../tiled/tilEdImporter";
 import { TilEdRenderer } from "../tiled/tilEdRenderer";
 
-export class TiledScene implements CreateSceneClass {
+export class TilEdScene implements CreateSceneClass {
     createScene = async (
         engine: AbstractEngine,
         canvas: HTMLCanvasElement
@@ -39,12 +39,13 @@ export class TiledScene implements CreateSceneClass {
         light.intensity = 0.7;
 
         const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/cityMap.tmx', scene);
-        TilEdRenderer.DebugImageTileset(map, 0, scene);
-        // TilEdImporter.ImportMapAsync(worldTilEdMap, scene);
-        // TilEdImporter.ImportMapAsync(hexagonalMap, scene);
+        TilEdRenderer.DebugImageTileset(map.tilesets[0], scene);
+        //TilEdRenderer.RenderTilemap(map, scene);
+        //TilEdImporter.ImportMapAsync(worldTilEdMap, scene);
+        //TilEdImporter.ImportMapAsync(hexagonalMap, scene);
 
         return scene;
     };
 }
 
-export default new TiledScene();
+export default new TilEdScene();

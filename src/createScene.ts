@@ -2,7 +2,7 @@ import type { Scene } from "@babylonjs/core/scene";
 
 // Change this import to check other scenes
 import { DefaultSceneWithTexture } from "./scenes/defaultWithTexture";
-import { TiledScene } from "./scenes/tiledScene";
+import { TilEdScene } from "./scenes/tilEdScene";
 import { LoadModelAndEnvScene } from "./scenes/loadModelAndEnv";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 
@@ -16,5 +16,5 @@ export interface CreateSceneModule {
 }
 
 export const getSceneModule = (): CreateSceneClass => {
-    return new TiledScene();
+    return new TilEdScene();
 }
