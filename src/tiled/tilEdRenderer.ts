@@ -1,0 +1,156 @@
+import { Scene, SpriteMap, Texture, Vector2 } from "@babylonjs/core";
+import { TilEdMap, TilEdTileset } from "./tilEd.types";
+import { AtlasJson, AtlasJsonFrame } from "../types/atlasjson.types";
+
+export class TilEdRenderer {
+    public static DebugImageTileset(map: TilEdMap, index: number, scene: Scene) : void {
+        // Create the JSON atlas to map from the TilEd tileset to the BabylonJS SpriteMap
+        const atlasJson = TilEdRenderer.TilesetToAtlasJson(map.tilesets[index], map.version);
+
+        // Load the spritesheet (with appropriate settings) associated with the JSON Atlas.
+        const spriteSheet = new Texture(map.tilesets[index].image!.source.toString(), scene,
+            true,
+            true,
+            Texture.NEAREST_NEAREST_MIPNEAREST
+        );
+        spriteSheet.wrapU = Texture.CLAMP_ADDRESSMODE;
+        spriteSheet.wrapV = Texture.CLAMP_ADDRESSMODE;
+
+        // Size of the map
+        const numberOfTiles = map.tilesets[index].tileCount;
+        const backgroundSize = new Vector2(numberOfTiles, 1);
+
+        // Create the sprite map
+        const spriteMap = new SpriteMap(
+            'TilEdMap',
+            atlasJson,
+            spriteSheet,
+            {
+                stageSize: backgroundSize,
+                layerCount: 1
+            },
+            scene
+        );
+
+        // Render the tiles
+        for (let i = 0; i < numberOfTiles; i++) {
+            spriteMap.changeTiles(0, new Vector2(i, 0), i);
+        }
+    }
+
+    public static RenderTilemap(map: TilEdMap, scene: Scene): void {
+
+    }
+
+    private static TilesetToAtlasJson(tileset: TilEdTileset, version: string): AtlasJson {
+        const imageHeight = tileset.image!.height;
+        const rows = tileset.image!.height / tileset.tileHeight;
+        const columns = tileset.image!.width / tileset.tileWidth;
+        const tileWidth = tileset.tileWidth;
+        const tileHeight = tileset.tileHeight;
+        
+        let tileCount = 1;
+        const atlasJsonFrames: AtlasJsonFrame[] = [];
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < columns; j++ ) {
+                const frame: AtlasJsonFrame = {
+                    filename: tileCount + ".png",
+                    frame: { x: j * tileWidth, y: imageHeight - (i + 1) * tileHeight, w: tileWidth, h: tileHeight  },
+                    rotated: false,
+                    trimmed: false,
+                    spriteSourceSize: { x: 0, y: 0, w: tileWidth, h: tileHeight },
+                    sourceSize: { w: tileWidth, h: tileHeight }
+                }
+    
+                atlasJsonFrames.push(frame);
+                tileCount++;
+            }
+        }
+    
+        const atlasJson: AtlasJson = {
+            frames: atlasJsonFrames,
+            meta: {
+                app: "https://www.mapeditor.org/",
+                version: version,
+                image: tileset.image!.source.toString(),
+                format:"RGBA8888",
+                size: {
+                    w: tileset.image!.width,
+                    h: tileset.image!.height
+                },
+                scale: 1,
+                smartupdate: ""
+            }
+        }
+    
+        return atlasJson;
+    }
+}
+
+// export function tilEdMapToSpriteMap(map: TilEdMap, scene: Scene) : SpriteMap {
+//     // Create the JSON atlas to map from the TilEd tileset to the BabylonJS SpriteMap
+//     const atlasJson = tilEdTilesetToAtlasJson(map.tileset[0], map.$.version);
+
+//     // Load the spritesheet (with appropriate settings) associated with the JSON Atlas.
+//     const spriteSheet = new Texture(map.tileset[0].image[0].$.source, scene,
+//         true,
+//         true,
+//         Texture.NEAREST_NEAREST_MIPNEAREST
+//    );
+//    spriteSheet.wrapU = Texture.CLAMP_ADDRESSMODE;
+//    spriteSheet.wrapV = Texture.CLAMP_ADDRESSMODE;
+
+//    // Size of the map
+//    const width = parseInt(map.$.width);
+//    const height = parseInt(map.$.height);
+//    const backgroundSize = new Vector2(width, height);
+
+//    // Create the sprite map
+//    const spriteMap = new SpriteMap(
+//        'TilEdMap' + RandomGUID(),
+//        atlasJson,
+//        spriteSheet,
+//        {
+//            stageSize: backgroundSize,
+//            layerCount: map.layer.length,
+//        },
+//        scene
+//    );
+
+//    // Last tile is transparent
+//    const lastTile = parseInt(map.tileset[0].$.tilecount) - 1;
+
+//    // Update the SpriteMap with the data from the TilEd map
+//    for (let z = 0; z < map.layer.length; z++) {
+//        const layerData = csvLayerToArray(map.layer[z].data[0]);
+//        for (let j = 0; j < height; j++) {
+//            for (let i = 0; i < width; i++) {
+//                const tileNumber = layerData[i + j * width];
+
+//                // TilEd uses 0 for empty tiles, which we will replace by a transparent tile as layers are opaque in SpriteMap
+//                // TilEd tiles are 1-indexed, while AtlasJSON uses 0-index for frames
+//                if (tileNumber > 0) {
+//                    spriteMap.changeTiles(z, new Vector2(i, height - j - 1), tileNumber - 1);
+//                } else {
+//                    spriteMap.changeTiles(z, new Vector2(i, height - j - 1), lastTile); // Transparent tile
+//                }
+//            }
+//        }
+//    }
+
+//    return spriteMap;
+// }
+
+// function csvLayerToArray(layer: TilEdLayerData): number[] {
+//     if (layer.$.encoding !== "csv") {
+//         throw new Error('Only CSV encoding is supported');
+//     }
+ 
+//     layer._ = layer._.replaceAll('\r\n', '');
+//     const split = layer._.split(',');
+//     const numbers = split.map((value: string) => { 
+//         return parseInt(value);
+//     });
+ 
+//     return numbers;
+//  }
