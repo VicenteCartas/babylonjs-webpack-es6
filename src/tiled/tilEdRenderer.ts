@@ -1,22 +1,16 @@
-import { RandomGUID, Scene, Sprite, SpriteMap, Texture, Vector2 } from "@babylonjs/core";
+import { RandomGUID, RawTexture, Scene, Sprite, SpriteMap, Texture, Vector2 } from "@babylonjs/core";
 import { TilEdMap, TilEdTileset } from "./tilEd.types";
 import { AtlasJson, AtlasJsonFrame } from "../types/atlasjson.types";
 
 export class TilEdRenderer {
-    public static DebugImageTileset(tileset: TilEdTileset, scene: Scene) : SpriteMap {
+    public static async DebugImageTileset(tileset: TilEdTileset, scene: Scene) : Promise<SpriteMap> {
         // Create the JSON atlas to map from the TilEd tileset to the BabylonJS SpriteMap
         const atlasJson = TilEdRenderer.TilesetToAtlasJson(tileset);
 
-        // Load the spritesheet (with appropriate settings) associated with the JSON Atlas.
-        const spriteSheet = new Texture(tileset.image!.source.toString(), scene,
-            true,
-            true,
-            Texture.NEAREST_NEAREST_MIPNEAREST
-        );
-        spriteSheet.wrapU = Texture.CLAMP_ADDRESSMODE;
-        spriteSheet.wrapV = Texture.CLAMP_ADDRESSMODE;
+        // Get the texture from the image or images that form the tileset
+        const spriteSheet = await TilEdRenderer.GetTilesetTexture(tileset, scene);
 
-        // Size of the map
+        // Size of the tileset
         const width = tileset.columns;
         const height = tileset.tileCount / tileset.columns;
         const backgroundSize = new Vector2(width * tileset.tileWidth, height * tileset.tileHeight);
@@ -192,5 +186,75 @@ export class TilEdRenderer {
         }
 
         return atlasJson;
+    }
+
+    private static async GetTilesetTexture(tileset: TilEdTileset, scene: Scene) : Promise<Texture> {
+        if (tileset.image !== undefined) {
+            return TilEdRenderer.GetImageTilesetTexture(tileset, scene);
+        } else if (tileset.tiles !== undefined && tileset.tiles.length > 0) {
+            return TilEdRenderer.GetTilesTilesetTexture(tileset, scene);
+        }
+
+        throw new Error(`Invalid tileset: ${tileset.name}`);
+    }
+
+    private static async GetImageTilesetTexture(tileset: TilEdTileset, scene: Scene) : Promise<Texture> {
+        // Load the spritesheet (with appropriate settings) associated with the JSON Atlas.
+        const spriteSheet = new Texture(
+            tileset.image!.source.toString(),
+            scene,
+            true,
+            true,
+            Texture.NEAREST_NEAREST_MIPNEAREST
+        );
+        spriteSheet.wrapU = Texture.CLAMP_ADDRESSMODE;
+        spriteSheet.wrapV = Texture.CLAMP_ADDRESSMODE;
+
+        return Promise.resolve(spriteSheet);
+    }
+
+    private static async GetTilesTilesetTexture(tileset: TilEdTileset, scene: Scene) : Promise<Texture> {
+        const texturesData: Uint8Array[] = [];
+
+        for (let i = 0; i < tileset.tiles!.length; i++) {
+            const tile = tileset.tiles![i];
+            const texture = new Texture(
+                tile.image.source.toString(),
+                scene,
+                true,
+                true,
+                Texture.NEAREST_NEAREST_MIPNEAREST);
+            texture.wrapU = Texture.CLAMP_ADDRESSMODE;
+            texture.wrapV = Texture.CLAMP_ADDRESSMODE;
+
+            const pixels = await texture.readPixels()!;
+            texturesData.push(new Uint8Array(pixels.buffer));
+            texture.dispose();
+        }
+
+        // Combine all images into a single texture
+        return RawTexture.CreateRGBTexture(
+            TilEdRenderer.MergeArrays(texturesData),
+            tileset.tileWidth * tileset.tileCount,
+            tileset.tileHeight,
+            scene);
+    }
+
+    private static MergeArrays(arrays: Uint8Array[]) : Uint8Array {
+        // Get the total length of all arrays.
+        let length = 0;
+        arrays.forEach(array => {
+            length += array.length;
+        });
+
+        // Create a new array with total length and merge all source arrays.
+        let mergedArray = new Uint8Array(length);
+        let offset = 0;
+        arrays.forEach(item => {
+            mergedArray.set(item, offset);
+            offset += item.length;
+    	});
+
+        return mergedArray;
     }
 }

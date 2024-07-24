@@ -42,9 +42,8 @@ export class TilEdScene implements CreateSceneClass {
         //const worldMap = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/worldMap.tmx', scene);
         const hexMap = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/HexagonalMap.tmx', scene);
 
-        TilEdRenderer.DebugImageTileset(hexMap.tilesets[0], scene);
+        await TilEdRenderer.DebugImageTileset(hexMap.tilesets[0], scene);
         //TilEdRenderer.RenderTilemap(map, scene);
-        
 
         return scene;
     };
