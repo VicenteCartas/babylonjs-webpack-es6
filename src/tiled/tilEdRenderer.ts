@@ -214,8 +214,11 @@ export class TilEdRenderer {
     }
 
     private static async GetTilesTilesetTexture(tileset: TilEdTileset, scene: Scene) : Promise<Texture> {
+        tileset.columns = tileset.tiles!.length;
+        const textures: Texture[] = [];
         const texturesData: Uint8Array[] = [];
 
+        // Load all textures
         for (let i = 0; i < tileset.tiles!.length; i++) {
             const tile = tileset.tiles![i];
             const texture = new Texture(
@@ -226,18 +229,31 @@ export class TilEdRenderer {
                 Texture.NEAREST_NEAREST_MIPNEAREST);
             texture.wrapU = Texture.CLAMP_ADDRESSMODE;
             texture.wrapV = Texture.CLAMP_ADDRESSMODE;
+            textures.push(texture);
+        }
 
+        await TilEdRenderer.LoadTextures(textures);
+
+        // Read all textures data
+        for (let i = 0; i < tileset.tiles!.length; i++) {
+            const texture = textures[i];
             const pixels = await texture.readPixels()!;
             texturesData.push(new Uint8Array(pixels.buffer));
             texture.dispose();
         }
 
-        // Combine all images into a single texture
+        // Combine all textures data into a single texture
         return RawTexture.CreateRGBTexture(
             TilEdRenderer.MergeArrays(texturesData),
             tileset.tileWidth * tileset.tileCount,
             tileset.tileHeight,
             scene);
+    }
+
+    private static async LoadTextures(textures: Texture[]) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            Texture.WhenAllReady(textures, resolve);
+        });
     }
 
     private static MergeArrays(arrays: Uint8Array[]) : Uint8Array {
