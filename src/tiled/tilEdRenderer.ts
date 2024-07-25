@@ -243,11 +243,14 @@ export class TilEdRenderer {
         }
 
         // Combine all textures data into a single texture
-        return RawTexture.CreateRGBTexture(
+        return RawTexture.CreateRGBATexture(
             TilEdRenderer.MergeArrays(texturesData),
             tileset.tileWidth * tileset.tileCount,
             tileset.tileHeight,
-            scene);
+            scene,
+            true,
+            true,
+            Texture.NEAREST_NEAREST_MIPNEAREST);
     }
 
     private static async LoadTextures(textures: Texture[]) : Promise<void> {

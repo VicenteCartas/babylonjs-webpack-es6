@@ -107,7 +107,7 @@ export class TilEdParser {
     private static parseTilesetTiles(tileElements: HTMLCollection, rootUrl: URL) : TilEdTilesetTile[] | undefined {
         const tiles: TilEdTilesetTile[] = [];
         for (let i = 0; i < tileElements.length; i++) {
-            const tileElement = tileElements.item(0);
+            const tileElement = tileElements.item(i);
             if (tileElement) {
                 const tile = new TilEdTilesetTile();
                 tile.id = TilEdParser.parseNumberAttribute(tileElement, 'id');
