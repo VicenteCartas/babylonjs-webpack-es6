@@ -3,7 +3,7 @@ import { TilEdMap, TilEdTileset } from "./tilEd.types";
 import { AtlasJson, AtlasJsonFrame } from "../types/atlasjson.types";
 
 export class TilEdRenderer {
-    public static async DebugImageTileset(tileset: TilEdTileset, scene: Scene) : Promise<SpriteMap> {
+    public static async DebugTileset(tileset: TilEdTileset, scene: Scene) : Promise<SpriteMap> {
         // Create the JSON atlas to map from the TilEd tileset to the BabylonJS SpriteMap
         const atlasJson = TilEdRenderer.TilesetToAtlasJson(tileset);
 
@@ -13,7 +13,7 @@ export class TilEdRenderer {
         // Size of the tileset
         const width = tileset.columns;
         const height = tileset.tileCount / tileset.columns;
-        const backgroundSize = new Vector2(width * tileset.tileWidth, height * tileset.tileHeight);
+        const backgroundSize = new Vector2(width, height);
 
         // Create the sprite map
         const spriteMap = new SpriteMap(
