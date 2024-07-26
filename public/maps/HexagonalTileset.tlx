@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.0" name="HexagonalTileset" tilewidth="72" tileheight="72" tilecount="30" columns="0">
+<tileset version="1.10" tiledversion="1.11.0" name="HexagonalTileset" tilewidth="72" tileheight="72" tilecount="31" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0">
   <image source="TestTiles/City1.png" width="72" height="72"/>
@@ -90,5 +90,8 @@
  </tile>
  <tile id="29">
   <image source="TestTiles/Woods1.png" width="72" height="72"/>
+ </tile>
+ <tile id="30">
+  <image source="TestTiles/Empty.png" width="72" height="72"/>
  </tile>
 </tileset>

@@ -37,30 +37,86 @@ export class TilEdRenderer {
         return spriteMap;
     }
 
-    public static RenderTilemap(map: TilEdMap, scene: Scene): SpriteMap | undefined {
-        if (map.orientation == "orthogonal") {
+    public static RenderTilemap(map: TilEdMap, scene: Scene): Promise<SpriteMap> {
+        if (map.orientation === 'orthogonal') {
+            return TilEdRenderer.RenderOrthogonalMap(map, scene);
+        } else if (map.orientation === 'hexagonal') {
             return TilEdRenderer.RenderOrthogonalMap(map, scene);
         }
 
-        return undefined;
+        throw new Error("Invalid map.");
     }
 
-    private static RenderOrthogonalMap(map: TilEdMap, scene: Scene) : SpriteMap {
+    private static async RenderOrthogonalMap(map: TilEdMap, scene: Scene) : Promise<SpriteMap> {
         // Create the JSON atlas to map from the TilEd tileset to the BabylonJS SpriteMap
         const atlasJson = TilEdRenderer.TilesetToAtlasJson(map.tilesets[0]);
 
-        // Load the spritesheet (with appropriate settings) associated with the JSON Atlas.
-        const spriteSheet = new Texture(map.tilesets[0].image!.source.toString(), scene,
-            true,
-            true,
-            Texture.NEAREST_NEAREST_MIPNEAREST
-        );
-        spriteSheet.wrapU = Texture.CLAMP_ADDRESSMODE;
-        spriteSheet.wrapV = Texture.CLAMP_ADDRESSMODE;
+        // Get the texture from the image or images that form the tileset
+        const spriteSheet = await TilEdRenderer.GetTilesetTexture(map.tilesets[0], scene);
 
         // Size of the map
         const width = map.width;
         const height = map.height;
+        const backgroundSize = new Vector2(width, height);
+
+        // Create the sprite map
+        const spriteMap = new SpriteMap(
+            'TilEdMap' + RandomGUID(),
+            atlasJson,
+            spriteSheet,
+            {
+                stageSize: backgroundSize,
+                layerCount: map.layers.length,
+                baseTile: map.tilesets[0].tileCount - 1
+            },
+            scene
+        );
+
+        // Update the SpriteMap with the data from the TilEd map
+        for (let z = 0; z < map.layers.length; z++) {
+            if (map.layers[z].visible) {
+                for (let j = 0; j < height; j++) {
+                    for (let i = 0; i < width; i++) {
+                        const tileNumber = map.layers[z].data[i + j * width];
+                        // TilEd uses 0 for empty tiles, which we setup as the base tile when we created the sprite map
+                        if (tileNumber === 0) {
+                            spriteMap.changeTiles(z, new Vector2(i, height - j - 1), map.tilesets[0].tileCount - 1);
+
+                        }
+                        else {
+                            spriteMap.changeTiles(z, new Vector2(i, height - j - 1), tileNumber - 1);
+                        }
+                        // TilEd tiles are 1-indexed, while AtlasJSON uses 0-index for frames
+                    }
+                }
+            }
+        }
+
+        return spriteMap;
+    }
+
+    private static RenderHexagonalMap(map: TilEdMap, scene: Scene) : Promise<SpriteMap> {
+        if (map.staggerAxis === 'x') {
+            return TilEdRenderer.RenderFlatTopHexagonalMap(map, scene);
+        } else if (map.staggerAxis === 'y') {
+            return TilEdRenderer.RenderPointTopHexagonalMap(map, scene);
+        }
+
+        throw new Error("Invalid map.");
+    }
+    
+    private static async RenderFlatTopHexagonalMap(map: TilEdMap, scene: Scene): Promise<SpriteMap> {
+        const horizontalDist = map.hexSideLength!;
+        const verticalDist = map.hexSideLength!;
+        // Create the JSON atlas to map from the TilEd tileset to the BabylonJS SpriteMap
+        const atlasJson = TilEdRenderer.TilesetToAtlasJson(map.tilesets[0]);
+
+        // Get the texture from the image or images that form the tileset
+        const spriteSheet = await TilEdRenderer.GetTilesetTexture(map.tilesets[0], scene);
+
+        // Size of the map
+        const width = map.width;
+        const height = map.height + 0.5; // Flat top hex tiles are offset by 1/2 tile in the Y axis
         const backgroundSize = new Vector2(width, height);
 
         // Create the sprite map
@@ -85,12 +141,14 @@ export class TilEdRenderer {
                     for (let i = 0; i < width; i++) {
                         const tileNumber = map.layers[z].data[i + j * width];
     
+                        const x = i - (i * 0.25);
+                        const y = i % 2 === 0 ? height - j - 1 : height - j - 1 + 0.5;
                         // TilEd uses 0 for empty tiles, which we will replace by a transparent tile as layers are opaque in SpriteMap
                         // TilEd tiles are 1-indexed, while AtlasJSON uses 0-index for frames
                         if (tileNumber > 0) {
-                            spriteMap.changeTiles(z, new Vector2(i, height - j - 1), tileNumber - 1);
+                            spriteMap.changeTiles(z, new Vector2(x, y), tileNumber - 1);
                         } else {
-                            spriteMap.changeTiles(z, new Vector2(i, height - j - 1), lastTile); // Transparent tile
+                            spriteMap.changeTiles(z, new Vector2(x, y), lastTile); // Transparent tile
                         }
                     }
                 }
@@ -100,10 +158,15 @@ export class TilEdRenderer {
         return spriteMap;
     }
 
+    private static RenderPointTopHexagonalMap(map: TilEdMap, scene: Scene): Promise<SpriteMap> {
+        throw new Error("Method not implemented.");
+    }
+
     private static TilesetToAtlasJson(tileset: TilEdTileset) : AtlasJson {
         if (tileset.image !== undefined) {
             return TilEdRenderer.ImageTilesetToAtlasJson(tileset);
         } else if (tileset.tiles !== undefined && tileset.tiles.length > 0) {
+            tileset.columns = 1; // All tiles will be in a single column for tile based tilesets
             return TilEdRenderer.TilesTilesetToAtlasJson(tileset);
         }
 
@@ -159,7 +222,7 @@ export class TilEdRenderer {
             const imageName = tiles[i].image.source.toString();
             const frame: AtlasJsonFrame = {
                 filename: imageName.slice(imageName.lastIndexOf('/')),
-                frame: { x: i * tileset.tileWidth, y: 0, w: tileset.tileWidth, h: tileset.tileHeight  },
+                frame: { x: 0, y: i * tileset.tileHeight, w: tileset.tileWidth, h: tileset.tileHeight  },
                 rotated: false,
                 trimmed: false,
                 spriteSourceSize: { x: 0, y: 0, w: tileset.tileWidth, h: tileset.tileHeight },
@@ -177,8 +240,8 @@ export class TilEdRenderer {
                 image: RandomGUID() + ".png",
                 format:"RGBA8888",
                 size: {
-                    w: tiles.length * tileset.tileWidth,
-                    h: tileset.tileHeight
+                    w: tileset.tileWidth,
+                    h: tiles.length * tileset.tileHeight
                 },
                 scale: 1,
                 smartupdate: ""
@@ -214,18 +277,18 @@ export class TilEdRenderer {
     }
 
     private static async GetTilesTilesetTexture(tileset: TilEdTileset, scene: Scene) : Promise<Texture> {
-        tileset.columns = tileset.tiles!.length;
+        const tiles = tileset.tiles!.reverse();
         const textures: Texture[] = [];
         const texturesData: Uint8Array[] = [];
 
         // Load all textures
-        for (let i = 0; i < tileset.tiles!.length; i++) {
-            const tile = tileset.tiles![i];
+        for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
             const texture = new Texture(
                 tile.image.source.toString(),
                 scene,
                 true,
-                true,
+                false,
                 Texture.NEAREST_NEAREST_MIPNEAREST);
             texture.wrapU = Texture.CLAMP_ADDRESSMODE;
             texture.wrapV = Texture.CLAMP_ADDRESSMODE;
@@ -245,8 +308,8 @@ export class TilEdRenderer {
         // Combine all textures data into a single texture
         return RawTexture.CreateRGBATexture(
             TilEdRenderer.MergeArrays(texturesData),
-            tileset.tileWidth * tileset.tileCount,
-            tileset.tileHeight,
+            tileset.tileWidth,
+            tileset.tileHeight * tileset.tileCount,
             scene,
             true,
             true,

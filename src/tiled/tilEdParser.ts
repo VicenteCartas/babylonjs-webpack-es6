@@ -149,7 +149,7 @@ export class TilEdParser {
         layer.height = TilEdParser.parseNumberAttribute(layerElement, 'height');
         layer.opacity = TilEdParser.parseNumberAttribute(layerElement, 'opacity', 1);
         layer.visible = TilEdParser.parseBooleanAttribute(layerElement, 'visible', true);
-        layer.tintColor = TilEdParser.parseOptionalColor4Attribute(layerElement, 'visible');
+        layer.tintColor = TilEdParser.parseOptionalColor4Attribute(layerElement, 'tintColor');
         layer.offsetX = TilEdParser.parseNumberAttribute(layerElement, 'offsetx', 0);
         layer.offsetY = TilEdParser.parseNumberAttribute(layerElement, 'offsety', 0);
 
