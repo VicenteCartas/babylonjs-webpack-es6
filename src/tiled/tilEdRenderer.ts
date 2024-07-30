@@ -84,7 +84,11 @@ export class TilEdRenderer {
 
                         }
                         else {
-                            spriteMap.changeTiles(z, new Vector2(i, height - j - 1), tileNumber - 1);
+                            if (i % 2 === 1) {
+                                spriteMap.changeTiles(z, new Vector2(i, height - j - 1), tileNumber - 1);
+                            } else {
+                                spriteMap.changeTiles(z, new Vector2(i, height - j - 1), tileNumber - 1);
+                            }
                         }
                         // TilEd tiles are 1-indexed, while AtlasJSON uses 0-index for frames
                     }

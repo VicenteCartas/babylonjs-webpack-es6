@@ -20,6 +20,8 @@ export class tilEdSpriteMap {
             false,
             Texture.NEAREST_NEAREST,
             Engine.TEXTURETYPE_FLOAT);
+        
+        this._updateTexture(this._map, this._tilesTexture);
     }
 
     private _calculateMapPixelSize(map: TilEdMap) : Vector2 {
@@ -36,5 +38,10 @@ export class tilEdSpriteMap {
         }
 
         throw new Error('Invalid map orientation');
+    }
+
+    // Renders the TilEd map into the raw texture
+    private _updateTexture(map: TilEdMap, tilesTexture: RawTexture) {
+        
     }
 }
