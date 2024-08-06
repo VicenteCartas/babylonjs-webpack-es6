@@ -1,4 +1,4 @@
-import { Color4 } from "@babylonjs/core";
+import { Color4, Texture } from "@babylonjs/core";
 import {
     TilEdLayer,
     TilEdLayerEncoding,
@@ -8,7 +8,6 @@ import {
     TilEdMapStaggerAxis,
     TilEdMapStaggerIndex,
     TilEdTileset,
-    TilEdTilesetImage,
     TilEdTilesetTile
 } from "./tilEd.types";
 import { FileUtilities } from "./fileUtilities";
@@ -62,6 +61,7 @@ export class TilEdParser {
 
     private static async parseTileset(tilesetElement: Element, rootUrl: URL): Promise<TilEdTileset> {
         const tileset = new TilEdTileset();
+        tileset.firstgid = TilEdParser.parseNumberAttribute(tilesetElement, 'firstgid');
 
         // Test if tileset is local or not
         const source = tilesetElement.getAttribute('source');
@@ -89,15 +89,16 @@ export class TilEdParser {
         return xmlData.documentElement;
     }
 
-    private static parseTilesetImage(element: Element | null, rootUrl: URL) : TilEdTilesetImage | undefined {
+    private static parseTilesetImage(element: Element | null, rootUrl: URL) : Texture | undefined {
         if (element && element.tagName == 'image') {
             if (element) {
-                const tilesetImage = new TilEdTilesetImage();
-                tilesetImage.source = new URL(TilEdParser.parseStringAttribute(element, 'source'), rootUrl);
-                tilesetImage.width = TilEdParser.parseNumberAttribute(element, 'width'); 
-                tilesetImage.height = TilEdParser.parseNumberAttribute(element, 'height');
-
-                return tilesetImage;
+                return new Texture(
+                    TilEdParser.parseStringAttribute(element, 'source'),
+                    null,
+                    true,
+                    true,
+                    Texture.NEAREST_NEAREST_MIPNEAREST
+                );
             }
         }
 
@@ -111,7 +112,7 @@ export class TilEdParser {
             if (tileElement) {
                 const tile = new TilEdTilesetTile();
                 tile.id = TilEdParser.parseNumberAttribute(tileElement, 'id');
-                tile.image = TilEdParser.parseTilesetImage(tileElement.children.item(0), rootUrl) as TilEdTilesetImage; 
+                tile.image = TilEdParser.parseTilesetImage(tileElement.children.item(0), rootUrl); 
 
                 tiles.push(tile);
             }

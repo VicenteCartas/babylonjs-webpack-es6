@@ -1,4 +1,4 @@
-import { Color4 } from "@babylonjs/core";
+import { Color4, Texture, Vector2 } from "@babylonjs/core";
 
 export type TilEdMapOrientation = 'orthogonal' | 'isometric' | 'staggered' | 'hexagonal';
 export type TilEdMapRenderOrder = 'right-down' | 'right-up' | 'left-down' | 'left-up';
@@ -23,6 +23,7 @@ export class TilEdMap {
 }
 
 export class TilEdTileset {
+    firstgid: number = 0;
     name: string = '';
     tileWidth: number = 0;
     tileHeight: number = 0;
@@ -30,19 +31,14 @@ export class TilEdTileset {
     margin: number = 0;
     tileCount: number = 0;
     columns: number = 0;
-    image?: TilEdTilesetImage;
+    image?: Texture;
     tiles?: TilEdTilesetTile[];
 }
 
-export class TilEdTilesetImage {
-    source: URL = new URL('https://www.babylonjs.com/');
-    width: number = 0;
-    height: number = 0;
-}
 
 export class TilEdTilesetTile {
     id: number = 0;
-    image: TilEdTilesetImage = new TilEdTilesetImage();
+    image?: Texture;
 }
 
 export class TilEdLayer {
@@ -56,4 +52,8 @@ export class TilEdLayer {
     offsetY: number = 0;
     encoding: TilEdLayerEncoding = 'csv';
     data: number[] = [];
+}
+
+export interface ITilEdSpriteMap {
+    getMapPixelSize(): Vector2;
 }

@@ -9,7 +9,6 @@ import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
 
 import { CreateSceneClass } from "../createScene";
 import { TilEdImporter } from "../tiled/tilEdImporter";
-import { TilEdRenderer } from "../tiled/tilEdRenderer";
 
 export class TilEdScene implements CreateSceneClass {
     createScene = async (
@@ -46,7 +45,7 @@ export class TilEdScene implements CreateSceneClass {
         //await TilEdRenderer.RenderTilemap(map, scene);
 
         //await TilEdRenderer.DebugTileset(map.tilesets[0], scene);
-        await TilEdRenderer.RenderTilemap(map, scene);
+        //await TilEdRenderer.RenderTilemap(map, scene);
         
         return scene;
     };
