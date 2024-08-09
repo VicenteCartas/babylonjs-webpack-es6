@@ -1,4 +1,4 @@
-import { Color4, Texture } from "@babylonjs/core";
+import { Color4, Scene, Texture } from "@babylonjs/core";
 import {
     TilEdLayer,
     TilEdLayerEncoding,
@@ -13,7 +13,7 @@ import {
 import { FileUtilities } from "./fileUtilities";
 
 export class TilEdParser {
-    public static async parseMapData(mapData: string, rootUrl: URL) : Promise<TilEdMap> {
+    public static async parseMapData(mapData: string, rootUrl: URL, scene: Scene) : Promise<TilEdMap> {
         // https://gist.github.com/prof3ssorSt3v3/61ccf69758cd6dbdc429934564864650
         let parser = new DOMParser();
         let xmlData = parser.parseFromString(mapData, 'application/xml');
@@ -35,7 +35,7 @@ export class TilEdParser {
         map.staggerIndex = mapNode.getAttribute('staggerindex') as TilEdMapStaggerIndex;
 
         // Parse all tilesets
-        map.tilesets = await this.parseTilesets(mapNode, rootUrl);
+        map.tilesets = await this.parseTilesets(mapNode, rootUrl, scene);
 
         // Parse all layers
         map.layers = this.parseLayers(mapNode);
@@ -43,7 +43,7 @@ export class TilEdParser {
         return map;
     }
 
-    private static async parseTilesets(mapElement: HTMLElement, rootUrl: URL) : Promise<TilEdTileset[]> {
+    private static async parseTilesets(mapElement: HTMLElement, rootUrl: URL, scene: Scene) : Promise<TilEdTileset[]> {
         const tilesets: TilEdTileset[] = [];
         const tilesetElements = mapElement.getElementsByTagName('tileset');
 
@@ -51,7 +51,7 @@ export class TilEdParser {
             for (let i = 0; i < tilesetElements.length; i++) {
                 const tilesetElement = tilesetElements.item(i);
                 if (tilesetElement) {
-                    tilesets.push(await TilEdParser.parseTileset(tilesetElement, rootUrl));
+                    tilesets.push(await TilEdParser.parseTileset(tilesetElement, rootUrl, scene));
                 }
             }
         }
@@ -59,7 +59,7 @@ export class TilEdParser {
         return tilesets;
     }
 
-    private static async parseTileset(tilesetElement: Element, rootUrl: URL): Promise<TilEdTileset> {
+    private static async parseTileset(tilesetElement: Element, rootUrl: URL, scene: Scene): Promise<TilEdTileset> {
         const tileset = new TilEdTileset();
         tileset.firstgid = TilEdParser.parseNumberAttribute(tilesetElement, 'firstgid');
 
@@ -76,8 +76,8 @@ export class TilEdParser {
         tileset.margin = TilEdParser.parseNumberAttribute(tilesetElement, 'margin', 0);
         tileset.tileCount = TilEdParser.parseNumberAttribute(tilesetElement, 'tilecount');
         tileset.columns = TilEdParser.parseNumberAttribute(tilesetElement, 'columns');
-        tileset.image = TilEdParser.parseTilesetImage(tilesetElement.children.item(0), rootUrl);
-        tileset.tiles = TilEdParser.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'), rootUrl);
+        tileset.image = TilEdParser.parseTilesetImage(tilesetElement.children.item(0), rootUrl, scene);
+        tileset.tiles = TilEdParser.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'), rootUrl, scene);
 
         return tileset;
     }
@@ -89,12 +89,12 @@ export class TilEdParser {
         return xmlData.documentElement;
     }
 
-    private static parseTilesetImage(element: Element | null, rootUrl: URL) : Texture | undefined {
+    private static parseTilesetImage(element: Element | null, rootUrl: URL, scene: Scene) : Texture | undefined {
         if (element && element.tagName == 'image') {
             if (element) {
                 return new Texture(
-                    TilEdParser.parseStringAttribute(element, 'source'),
-                    null,
+                    new URL(TilEdParser.parseStringAttribute(element, 'source'), rootUrl).toString(),
+                    scene,
                     true,
                     true,
                     Texture.NEAREST_NEAREST_MIPNEAREST
@@ -105,14 +105,14 @@ export class TilEdParser {
         return undefined;
     }
 
-    private static parseTilesetTiles(tileElements: HTMLCollection, rootUrl: URL) : TilEdTilesetTile[] | undefined {
+    private static parseTilesetTiles(tileElements: HTMLCollection, rootUrl: URL, scene: Scene) : TilEdTilesetTile[] | undefined {
         const tiles: TilEdTilesetTile[] = [];
         for (let i = 0; i < tileElements.length; i++) {
             const tileElement = tileElements.item(i);
             if (tileElement) {
                 const tile = new TilEdTilesetTile();
                 tile.id = TilEdParser.parseNumberAttribute(tileElement, 'id');
-                tile.image = TilEdParser.parseTilesetImage(tileElement.children.item(0), rootUrl); 
+                tile.image = TilEdParser.parseTilesetImage(tileElement.children.item(0), rootUrl, scene); 
 
                 tiles.push(tile);
             }

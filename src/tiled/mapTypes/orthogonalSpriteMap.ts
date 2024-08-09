@@ -81,11 +81,13 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
         const tilePosition = tileId - tileset.firstgid;
         const tileTextureData = await this._getTilesetTextureData(tileset, tilePosition);
 
-        // Update the texture buffer with the tile data
+        // Update the texture buffer with the tile buffer data
         for (let j = 0; j < tileHeight; j++) {
             for (let i = 0; i < tileWidth; i++) {
-                console.log (i + ',' + j);
-                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4] = tileTextureData[j * tileWidth + tileWidth];
+                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4] = tileTextureData[j * tileWidth + i];
+                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4 + 1] = tileTextureData[j * tileWidth + i + 1];
+                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4 + 2] = tileTextureData[j * tileWidth + i + 2];
+                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4 + 3] = tileTextureData[j * tileWidth + i + 3];
             }
         }
     }
@@ -115,8 +117,7 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
     }
 
     private async _getSingleImageTilesetTileData(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
-        // TODO: FIND X and Y
-        const result = await tileset.image!.readPixels(
+        await tileset.image!.readPixels(
             undefined,
             undefined,
             this._tileBuffer,
