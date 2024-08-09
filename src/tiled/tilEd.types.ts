@@ -56,4 +56,5 @@ export class TilEdLayer {
 
 export interface ITilEdSpriteMap {
     getMapPixelSize(): Vector2;
+    renderToTexture() : Promise<Texture>;
 }

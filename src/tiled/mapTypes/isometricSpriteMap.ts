@@ -13,4 +13,8 @@ export class IsometricSpriteMap implements ITilEdSpriteMap {
     public getMapPixelSize(): Vector2 {
         throw new Error('Not implemented');
     }
+
+    public async renderToTexture() : Promise<Texture> {
+        throw new Error('Not implemented');
+    }
 }

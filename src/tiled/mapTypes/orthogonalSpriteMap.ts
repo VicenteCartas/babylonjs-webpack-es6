@@ -83,7 +83,8 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
 
         // Update the texture buffer with the tile data
         for (let j = 0; j < tileHeight; j++) {
-            for (let i = 0; i < tileWidth; j++) {
+            for (let i = 0; i < tileWidth; i++) {
+                console.log (i + ',' + j);
                 this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4] = tileTextureData[j * tileWidth + tileWidth];
             }
         }
@@ -105,19 +106,19 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
     /** Gets the tile pixel data */
     private _getTilesetTextureData(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
         if (tileset.image !== undefined) {
-            return this._getImageTilesetTexture(tileset, tileId);
+            return this._getSingleImageTilesetTileData(tileset, tileId);
         } else if (tileset.tiles !== undefined && tileset.tiles.length > 0) {
-            return this._getTilesTilesetTexture(tileset, tileId);
+            return this._getMultipleImagesTilesetTileData(tileset, tileId);
         } else {
             throw new Error(`Invalid tileset: ${tileset.name}`);
         }
     }
 
-    private async _getImageTilesetTexture(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
+    private async _getSingleImageTilesetTileData(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
         // TODO: FIND X and Y
-        await tileset.tiles![tileId].image!.readPixels(
-            0,
-            0,
+        const result = await tileset.image!.readPixels(
+            undefined,
+            undefined,
             this._tileBuffer,
             false,
             false,
@@ -128,7 +129,7 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
         return this._tileBuffer;
     }
 
-    private async _getTilesTilesetTexture(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
+    private async _getMultipleImagesTilesetTileData(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
         await tileset.tiles![tileId].image!.readPixels(0, 0, this._tileBuffer);
         return this._tileBuffer;
     }

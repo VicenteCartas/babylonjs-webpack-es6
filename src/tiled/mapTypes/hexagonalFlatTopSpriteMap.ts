@@ -20,4 +20,8 @@ export class HexagonalFlatTopSpriteMap implements ITilEdSpriteMap {
 
         throw new Error('HexSideLenght not defined for hexagonal map');
     }
+
+    public async renderToTexture() : Promise<Texture> {
+        throw new Error('Not implemented');
+    }
 }
