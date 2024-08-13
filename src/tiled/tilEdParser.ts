@@ -13,7 +13,14 @@ import {
 import { FileUtilities } from "./fileUtilities";
 
 export class TilEdParser {
-    public static async parseMapData(mapData: string, rootUrl: URL, scene: Scene) : Promise<TilEdMap> {
+    private texturesToLoad: Texture[] = [];
+
+    constructor() {}
+
+    public async parseMapData(mapData: string, rootUrl: URL, scene: Scene) : Promise<TilEdMap> {
+        this.dispose();
+        this.texturesToLoad = [];
+
         // https://gist.github.com/prof3ssorSt3v3/61ccf69758cd6dbdc429934564864650
         let parser = new DOMParser();
         let xmlData = parser.parseFromString(mapData, 'application/xml');
@@ -22,15 +29,15 @@ export class TilEdParser {
         const map = new TilEdMap();
 
         // Parse the map data
-        map.version = this.parseStringAttribute(mapNode, 'version');
-        map.tiledVersion = this.parseStringAttribute(mapNode, 'tiledversion');
-        map.orientation = this.parseStringAttribute(mapNode, 'orientation') as TilEdMapOrientation;
-        map.renderorder = this.parseStringAttribute(mapNode, 'renderorder') as TilEdMapRenderOrder;
-        map.width = this.parseNumberAttribute(mapNode, 'width');
-        map.height = this.parseNumberAttribute(mapNode, 'height');
-        map.tileWidth = this.parseNumberAttribute(mapNode, 'tilewidth');
-        map.tileHeight = this.parseNumberAttribute(mapNode, 'tileheight');
-        map.hexSideLength = this.parseOptionalNumberAttribute(mapNode, 'hexsidelength');
+        map.version = TilEdParser.parseStringAttribute(mapNode, 'version');
+        map.tiledVersion = TilEdParser.parseStringAttribute(mapNode, 'tiledversion');
+        map.orientation = TilEdParser.parseStringAttribute(mapNode, 'orientation') as TilEdMapOrientation;
+        map.renderorder = TilEdParser.parseStringAttribute(mapNode, 'renderorder') as TilEdMapRenderOrder;
+        map.width = TilEdParser.parseNumberAttribute(mapNode, 'width');
+        map.height = TilEdParser.parseNumberAttribute(mapNode, 'height');
+        map.tileWidth = TilEdParser.parseNumberAttribute(mapNode, 'tilewidth');
+        map.tileHeight = TilEdParser.parseNumberAttribute(mapNode, 'tileheight');
+        map.hexSideLength = TilEdParser.parseOptionalNumberAttribute(mapNode, 'hexsidelength');
         map.staggerAxis = mapNode.getAttribute('staggeraxis') as TilEdMapStaggerAxis;
         map.staggerIndex = mapNode.getAttribute('staggerindex') as TilEdMapStaggerIndex;
 
@@ -40,10 +47,19 @@ export class TilEdParser {
         // Parse all layers
         map.layers = this.parseLayers(mapNode);
         
+        // Finish loading all textures
+        await TilEdParser.loadTextures(this.texturesToLoad);
+        
         return map;
     }
 
-    private static async parseTilesets(mapElement: HTMLElement, rootUrl: URL, scene: Scene) : Promise<TilEdTileset[]> {
+    public dispose() : void {
+        this.texturesToLoad.forEach(texture => {
+            texture.dispose();
+        });
+    }
+
+    private async parseTilesets(mapElement: HTMLElement, rootUrl: URL, scene: Scene) : Promise<TilEdTileset[]> {
         const tilesets: TilEdTileset[] = [];
         const tilesetElements = mapElement.getElementsByTagName('tileset');
 
@@ -51,7 +67,7 @@ export class TilEdParser {
             for (let i = 0; i < tilesetElements.length; i++) {
                 const tilesetElement = tilesetElements.item(i);
                 if (tilesetElement) {
-                    tilesets.push(await TilEdParser.parseTileset(tilesetElement, rootUrl, scene));
+                    tilesets.push(await this.parseTileset(tilesetElement, rootUrl, scene));
                 }
             }
         }
@@ -59,14 +75,14 @@ export class TilEdParser {
         return tilesets;
     }
 
-    private static async parseTileset(tilesetElement: Element, rootUrl: URL, scene: Scene): Promise<TilEdTileset> {
+    private async parseTileset(tilesetElement: Element, rootUrl: URL, scene: Scene): Promise<TilEdTileset> {
         const tileset = new TilEdTileset();
         tileset.firstgid = TilEdParser.parseNumberAttribute(tilesetElement, 'firstgid');
 
         // Test if tileset is local or not
         const source = tilesetElement.getAttribute('source');
         if (source) {
-            tilesetElement = await TilEdParser.parseRemoteTileset(source, rootUrl);
+            tilesetElement = await this.parseRemoteTileset(source, rootUrl);
         }
 
         tileset.name = TilEdParser.parseStringAttribute(tilesetElement, 'name');
@@ -76,43 +92,46 @@ export class TilEdParser {
         tileset.margin = TilEdParser.parseNumberAttribute(tilesetElement, 'margin', 0);
         tileset.tileCount = TilEdParser.parseNumberAttribute(tilesetElement, 'tilecount');
         tileset.columns = TilEdParser.parseNumberAttribute(tilesetElement, 'columns');
-        tileset.image = TilEdParser.parseTilesetImage(tilesetElement.children.item(0), rootUrl, scene);
-        tileset.tiles = TilEdParser.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'), rootUrl, scene);
+        tileset.image = this.parseTilesetImage(tilesetElement.children.item(0), rootUrl, scene);
+        tileset.tiles = this.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'), rootUrl, scene);
 
         return tileset;
     }
  
-    private static async parseRemoteTileset(tilesetUrl: string, rootUrl: URL) : Promise<Element>{
+    private async parseRemoteTileset(tilesetUrl: string, rootUrl: URL) : Promise<Element>{
         const tilesetData = await FileUtilities.requestFile(new URL(tilesetUrl, rootUrl));
         let parser = new DOMParser();
         let xmlData = parser.parseFromString(tilesetData, 'application/xml');
         return xmlData.documentElement;
     }
 
-    private static parseTilesetImage(element: Element | null, rootUrl: URL, scene: Scene) : Texture | undefined {
+    private parseTilesetImage(element: Element | null, rootUrl: URL, scene: Scene) : Texture | undefined {
         if (element && element.tagName == 'image') {
             if (element) {
-                return new Texture(
+                const texture = new Texture(
                     new URL(TilEdParser.parseStringAttribute(element, 'source'), rootUrl).toString(),
                     scene,
                     true,
                     true,
                     Texture.NEAREST_NEAREST_MIPNEAREST
                 );
+
+                this.texturesToLoad.push(texture);
+                return texture;
             }
         }
 
         return undefined;
     }
 
-    private static parseTilesetTiles(tileElements: HTMLCollection, rootUrl: URL, scene: Scene) : TilEdTilesetTile[] | undefined {
+    private parseTilesetTiles(tileElements: HTMLCollection, rootUrl: URL, scene: Scene) : TilEdTilesetTile[] | undefined {
         const tiles: TilEdTilesetTile[] = [];
         for (let i = 0; i < tileElements.length; i++) {
             const tileElement = tileElements.item(i);
             if (tileElement) {
                 const tile = new TilEdTilesetTile();
                 tile.id = TilEdParser.parseNumberAttribute(tileElement, 'id');
-                tile.image = TilEdParser.parseTilesetImage(tileElement.children.item(0), rootUrl, scene); 
+                tile.image = this.parseTilesetImage(tileElement.children.item(0), rootUrl, scene); 
 
                 tiles.push(tile);
             }
@@ -125,7 +144,7 @@ export class TilEdParser {
         return tiles;
     }
 
-    private static parseLayers(mapElement: HTMLElement): TilEdLayer[] {
+    private parseLayers(mapElement: HTMLElement): TilEdLayer[] {
         const layers: TilEdLayer[] = [];
         const layerElements = mapElement.getElementsByTagName('layer');
 
@@ -133,7 +152,7 @@ export class TilEdParser {
             for (let i = 0; i < layerElements.length; i++) {
                 const layerElement = layerElements.item(i);
                 if (layerElement) {
-                    layers.push(TilEdParser.parseLayer(layerElement));
+                    layers.push(this.parseLayer(layerElement));
                 }
             }
         }
@@ -141,7 +160,7 @@ export class TilEdParser {
         return layers;
     }
     
-    private static parseLayer(layerElement: Element): TilEdLayer {
+    private parseLayer(layerElement: Element): TilEdLayer {
         const layer: TilEdLayer = new TilEdLayer();
 
         // Parse the layer data
@@ -158,23 +177,23 @@ export class TilEdParser {
         const dataElement = layerElement.getElementsByTagName('data').item(0);
         if (dataElement) {
             layer.encoding = TilEdParser.parseStringAttribute(dataElement, 'encoding') as TilEdLayerEncoding;
-            layer.data = TilEdParser.parseLayerData(dataElement, layer.encoding);
+            layer.data = this.parseLayerData(dataElement, layer.encoding);
         }
 
         return layer;
     }
 
-    private static parseLayerData(dataElement: Element, encoding: TilEdLayerEncoding): number[] {
+    private parseLayerData(dataElement: Element, encoding: TilEdLayerEncoding): number[] {
         if (encoding === 'csv') {
-            return TilEdParser.parseCsvLayerData(dataElement.textContent);
+            return this.parseCsvLayerData(dataElement.textContent);
         } else if (encoding == 'base64') {
-            return TilEdParser.parseBase64LayerData(dataElement.textContent);
+            return this.parseBase64LayerData(dataElement.textContent);
         } else {
             throw new Error('Unknown encoding ' + encoding + ' in node ' + dataElement.tagName);
         }
     }
 
-    private static parseCsvLayerData(data: string | null) : number[] {
+    private parseCsvLayerData(data: string | null) : number[] {
         if (!data) {
             return [];
         }
@@ -185,7 +204,7 @@ export class TilEdParser {
         });
     }
 
-    private static parseBase64LayerData(data: string | null) : number[] {
+    private parseBase64LayerData(data: string | null) : number[] {
         if (!data) {
             return [];
         }
@@ -272,5 +291,11 @@ export class TilEdParser {
         }
 
         return color;
+    }
+
+    private static async loadTextures(textures: Texture[]) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            Texture.WhenAllReady(textures, resolve);
+        });
     }
 }
