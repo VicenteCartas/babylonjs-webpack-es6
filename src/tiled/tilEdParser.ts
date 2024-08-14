@@ -112,7 +112,7 @@ export class TilEdParser {
                     new URL(TilEdParser.parseStringAttribute(element, 'source'), rootUrl).toString(),
                     scene,
                     true,
-                    true,
+                    false,
                     Texture.NEAREST_NEAREST_MIPNEAREST
                 );
 

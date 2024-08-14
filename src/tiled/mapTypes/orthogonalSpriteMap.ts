@@ -123,8 +123,8 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
             this._tileBuffer,
             false,
             false,
-            Math.floor(tileId / tileset.columns) * this._map.tileWidth,
-            tileId % tileset.columns * this._map.tileHeight,
+            tileId % tileset.columns * this._map.tileWidth,
+            Math.floor(tileId / tileset.columns) * this._map.tileHeight,
             this._map.tileWidth,
             this._map.tileHeight);
 
