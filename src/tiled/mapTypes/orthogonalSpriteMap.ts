@@ -44,7 +44,7 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
                             continue;
                         }
 
-                        await this._changeTile(new Vector2(i, height - j - 1), z, tileNumber);
+                        await this._changeTile(j, i, tileNumber);
                     }
                 }
             }
@@ -56,10 +56,9 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
             this._mapPixelSize.x,
             this._mapPixelSize.y,
             this._scene,
+            true,
             false,
-            false,
-            Texture.NEAREST_NEAREST,
-            Engine.TEXTURETYPE_FLOAT);
+            Texture.NEAREST_NEAREST_MIPNEAREST);
 
         return this._mapTexture;
     }
@@ -70,7 +69,9 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
     }
 
     /** Updates a position on the map texture */
-    private async _changeTile(mapPosition: Vector2, layerIndex: number, tileId: number) : Promise<void> {
+    private async _changeTile(mapX: number, mapY: number, tileId: number) : Promise<void> {
+        const mapPixelX = mapX * this._map.tileWidth;
+        const mapPixelY = mapY * this._map.tileWidth;
         const tileHeight = this._map.tileHeight;
         const tileWidth = this._map.tileWidth;
         const mapHeight = this._mapPixelSize.y;
@@ -84,10 +85,10 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
         // Update the texture buffer with the tile buffer data
         for (let j = 0; j < tileHeight; j++) {
             for (let i = 0; i < tileWidth; i++) {
-                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4] = tileTextureData[j * tileWidth + i];
-                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4 + 1] = tileTextureData[j * tileWidth + i + 1];
-                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4 + 2] = tileTextureData[j * tileWidth + i + 2];
-                this._mapBuffer[mapWidth * 4 * mapPosition.y * tileHeight * 4 + mapPosition.x * tileWidth * 4 + 3] = tileTextureData[j * tileWidth + i + 3];
+                this._mapBuffer[mapPixelX * 4 + mapPixelY * mapWidth * 4 + mapWidth * 4 * j + i * 4] = tileTextureData[j * tileWidth + i * 4];
+                this._mapBuffer[mapPixelX * 4 + mapPixelY * mapWidth * 4 + mapWidth * 4 * j + i * 4 + 1] = tileTextureData[j * tileWidth + i * 4 + 1];
+                this._mapBuffer[mapPixelX * 4 + mapPixelY * mapWidth * 4 + mapWidth * 4 * j + i * 4 + 2] = tileTextureData[j * tileWidth + i * 4 + 2];
+                this._mapBuffer[mapPixelX * 4 + mapPixelY * mapWidth * 4 + mapWidth * 4 * j + i * 4 + 3] = tileTextureData[j * tileWidth + i * 4 + 3];
             }
         }
     }
