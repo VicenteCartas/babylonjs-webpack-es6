@@ -83,12 +83,13 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
         const tileTextureData = await this._getTilesetTextureData(tileset, tilePosition);
 
         // Update the texture buffer with the tile buffer data
+        const offset = (mapXPx + mapYPx * mapWidthPx) * 4;
         for (let j = 0; j < tileHeightPx; j++) {
             for (let i = 0; i < tileWidthPx; i++) {
-                this._mapBuffer[mapXPx * 4 + mapYPx * mapWidthPx * 4 + mapWidthPx * 4 * j + i * 4] = tileTextureData[j * tileWidthPx + i * 4];
-                this._mapBuffer[mapXPx * 4 + mapYPx * mapWidthPx * 4 + mapWidthPx * 4 * j + i * 4 + 1] = tileTextureData[j * tileWidthPx + i * 4 + 1];
-                this._mapBuffer[mapXPx * 4 + mapYPx * mapWidthPx * 4 + mapWidthPx * 4 * j + i * 4 + 2] = tileTextureData[j * tileWidthPx + i * 4 + 2];
-                this._mapBuffer[mapXPx * 4 + mapYPx * mapWidthPx * 4 + mapWidthPx * 4 * j + i * 4 + 3] = tileTextureData[j * tileWidthPx + i * 4 + 3];
+                this._mapBuffer[offset + (i + mapWidthPx * j) * 4] = tileTextureData[(i + j * tileWidthPx) * 4];
+                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 1] = tileTextureData[(i + j * tileWidthPx) * 4 + 1];
+                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 2] = tileTextureData[(i + j * tileWidthPx) * 4 + 2];
+                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 3] = tileTextureData[(i + j * tileWidthPx) * 4 + 3];
             }
         }
     }
