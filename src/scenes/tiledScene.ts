@@ -45,8 +45,8 @@ export class TilEdScene implements CreateSceneClass {
 
         const importer = new TilEdImporter();
         //const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/NewRenderingMap.tmx', scene);
-        //const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/cityMap.tmx', scene);
-        const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/worldMap.tmx', scene);
+        const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/cityMap.tmx', scene);
+        //const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/worldMap.tmx', scene);
         const spriteMap = getTiledSpriteMap(map, scene);
         const size = spriteMap.getMapPixelSize();
         const groundTexture = await spriteMap.renderToTexture();
