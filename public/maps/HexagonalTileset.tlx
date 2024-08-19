@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tileset version="1.10" tiledversion="1.11.0" name="HexagonalTileset" tilewidth="72" tileheight="72" tilecount="31" columns="0">
+ <grid orientation="orthogonal" width="1" height="1"/>
+ <tile id="0">
+  <image source="TestTiles/City1.png" width="72" height="72"/>
+ </tile>
+ <tile id="1">
+  <image source="TestTiles/Woods2.png" width="72" height="72"/>
+ </tile>
+ <tile id="2">
+  <image source="TestTiles/Woods3.png" width="72" height="72"/>
+ </tile>
+ <tile id="3">
+  <image source="TestTiles/Woods4.png" width="72" height="72"/>
+ </tile>
+ <tile id="4">
+  <image source="TestTiles/Woods5.png" width="72" height="72"/>
+ </tile>
+ <tile id="5">
+  <image source="TestTiles/City2.png" width="72" height="72"/>
+ </tile>
+ <tile id="6">
+  <image source="TestTiles/City3.png" width="72" height="72"/>
+ </tile>
+ <tile id="7">
+  <image source="TestTiles/City4.png" width="72" height="72"/>
+ </tile>
+ <tile id="8">
+  <image source="TestTiles/City5.png" width="72" height="72"/>
+ </tile>
+ <tile id="9">
+  <image source="TestTiles/Grass1.png" width="72" height="72"/>
+ </tile>
+ <tile id="10">
+  <image source="TestTiles/Grass2.png" width="72" height="72"/>
+ </tile>
+ <tile id="11">
+  <image source="TestTiles/Grass3.png" width="72" height="72"/>
+ </tile>
+ <tile id="12">
+  <image source="TestTiles/Grass4.png" width="72" height="72"/>
+ </tile>
+ <tile id="13">
+  <image source="TestTiles/Grass5.png" width="72" height="72"/>
+ </tile>
+ <tile id="14">
+  <image source="TestTiles/Hills1.png" width="72" height="72"/>
+ </tile>
+ <tile id="15">
+  <image source="TestTiles/Hills2.png" width="72" height="72"/>
+ </tile>
+ <tile id="16">
+  <image source="TestTiles/Hills3.png" width="72" height="72"/>
+ </tile>
+ <tile id="17">
+  <image source="TestTiles/Hills4.png" width="72" height="72"/>
+ </tile>
+ <tile id="18">
+  <image source="TestTiles/Hills5.png" width="72" height="72"/>
+ </tile>
+ <tile id="19">
+  <image source="TestTiles/Swamp1.png" width="72" height="72"/>
+ </tile>
+ <tile id="20">
+  <image source="TestTiles/Swamp2.png" width="72" height="72"/>
+ </tile>
+ <tile id="21">
+  <image source="TestTiles/Swamp3.png" width="72" height="72"/>
+ </tile>
+ <tile id="22">
+  <image source="TestTiles/Swamp4.png" width="72" height="72"/>
+ </tile>
+ <tile id="23">
+  <image source="TestTiles/Swamp5.png" width="72" height="72"/>
+ </tile>
+ <tile id="24">
+  <image source="TestTiles/Water1.png" width="72" height="72"/>
+ </tile>
+ <tile id="25">
+  <image source="TestTiles/Water2.png" width="72" height="72"/>
+ </tile>
+ <tile id="26">
+  <image source="TestTiles/Water3.png" width="72" height="72"/>
+ </tile>
+ <tile id="27">
+  <image source="TestTiles/Water4.png" width="72" height="72"/>
+ </tile>
+ <tile id="28">
+  <image source="TestTiles/Water5.png" width="72" height="72"/>
+ </tile>
+ <tile id="29">
+  <image source="TestTiles/Woods1.png" width="72" height="72"/>
+ </tile>
+ <tile id="30">
+  <image source="TestTiles/Empty.png" width="72" height="72"/>
+ </tile>
+</tileset>
