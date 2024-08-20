@@ -1,23 +1,23 @@
 import { Color4, Scene, Texture } from "@babylonjs/core";
 import {
-    TilEdLayer,
-    TilEdLayerEncoding,
-    TilEdMap,
-    TilEdMapOrientation,
-    TilEdMapRenderOrder,
-    TilEdMapStaggerAxis,
-    TilEdMapStaggerIndex,
-    TilEdTileset,
-    TilEdTilesetTile
-} from "./tilEd.types";
+    TiledLayer,
+    TiledLayerEncoding,
+    TiledMap,
+    TiledMapOrientation,
+    TiledMapRenderOrder,
+    TiledMapStaggerAxis,
+    TiledMapStaggerIndex,
+    TiledTileset,
+    TiledTilesetTile
+} from "./tiled.types";
 import { FileUtilities } from "./fileUtilities";
 
-export class TilEdParser {
+export class TiledParser {
     private texturesToLoad: Texture[] = [];
 
     constructor() {}
 
-    public async parseMapData(mapData: string, rootUrl: URL, scene: Scene) : Promise<TilEdMap> {
+    public async parseMapData(mapData: string, rootUrl: URL, scene: Scene) : Promise<TiledMap> {
         this.dispose();
         this.texturesToLoad = [];
 
@@ -26,20 +26,20 @@ export class TilEdParser {
         let xmlData = parser.parseFromString(mapData, 'application/xml');
         let mapNode = xmlData.documentElement;
         
-        const map = new TilEdMap();
+        const map = new TiledMap();
 
         // Parse the map data
-        map.version = TilEdParser.parseStringAttribute(mapNode, 'version');
-        map.tiledVersion = TilEdParser.parseStringAttribute(mapNode, 'tiledversion');
-        map.orientation = TilEdParser.parseStringAttribute(mapNode, 'orientation') as TilEdMapOrientation;
-        map.renderorder = TilEdParser.parseStringAttribute(mapNode, 'renderorder') as TilEdMapRenderOrder;
-        map.width = TilEdParser.parseNumberAttribute(mapNode, 'width');
-        map.height = TilEdParser.parseNumberAttribute(mapNode, 'height');
-        map.tileWidth = TilEdParser.parseNumberAttribute(mapNode, 'tilewidth');
-        map.tileHeight = TilEdParser.parseNumberAttribute(mapNode, 'tileheight');
-        map.hexSideLength = TilEdParser.parseOptionalNumberAttribute(mapNode, 'hexsidelength');
-        map.staggerAxis = mapNode.getAttribute('staggeraxis') as TilEdMapStaggerAxis;
-        map.staggerIndex = mapNode.getAttribute('staggerindex') as TilEdMapStaggerIndex;
+        map.version = TiledParser.parseStringAttribute(mapNode, 'version');
+        map.tiledVersion = TiledParser.parseStringAttribute(mapNode, 'tiledversion');
+        map.orientation = TiledParser.parseStringAttribute(mapNode, 'orientation') as TiledMapOrientation;
+        map.renderorder = TiledParser.parseStringAttribute(mapNode, 'renderorder') as TiledMapRenderOrder;
+        map.width = TiledParser.parseNumberAttribute(mapNode, 'width');
+        map.height = TiledParser.parseNumberAttribute(mapNode, 'height');
+        map.tileWidth = TiledParser.parseNumberAttribute(mapNode, 'tilewidth');
+        map.tileHeight = TiledParser.parseNumberAttribute(mapNode, 'tileheight');
+        map.hexSideLength = TiledParser.parseOptionalNumberAttribute(mapNode, 'hexsidelength');
+        map.staggerAxis = mapNode.getAttribute('staggeraxis') as TiledMapStaggerAxis;
+        map.staggerIndex = mapNode.getAttribute('staggerindex') as TiledMapStaggerIndex;
 
         // Parse all tilesets
         map.tilesets = await this.parseTilesets(mapNode, rootUrl, scene);
@@ -48,7 +48,7 @@ export class TilEdParser {
         map.layers = this.parseLayers(mapNode);
         
         // Finish loading all textures
-        await TilEdParser.loadTextures(this.texturesToLoad);
+        await TiledParser.loadTextures(this.texturesToLoad);
         
         return map;
     }
@@ -59,8 +59,8 @@ export class TilEdParser {
         });
     }
 
-    private async parseTilesets(mapElement: HTMLElement, rootUrl: URL, scene: Scene) : Promise<TilEdTileset[]> {
-        const tilesets: TilEdTileset[] = [];
+    private async parseTilesets(mapElement: HTMLElement, rootUrl: URL, scene: Scene) : Promise<TiledTileset[]> {
+        const tilesets: TiledTileset[] = [];
         const tilesetElements = mapElement.getElementsByTagName('tileset');
 
         if (tilesetElements) {
@@ -75,9 +75,9 @@ export class TilEdParser {
         return tilesets;
     }
 
-    private async parseTileset(tilesetElement: Element, rootUrl: URL, scene: Scene): Promise<TilEdTileset> {
-        const tileset = new TilEdTileset();
-        tileset.firstgid = TilEdParser.parseNumberAttribute(tilesetElement, 'firstgid');
+    private async parseTileset(tilesetElement: Element, rootUrl: URL, scene: Scene): Promise<TiledTileset> {
+        const tileset = new TiledTileset();
+        tileset.firstgid = TiledParser.parseNumberAttribute(tilesetElement, 'firstgid');
 
         // Test if tileset is local or not
         const source = tilesetElement.getAttribute('source');
@@ -85,13 +85,13 @@ export class TilEdParser {
             tilesetElement = await this.parseRemoteTileset(source, rootUrl);
         }
 
-        tileset.name = TilEdParser.parseStringAttribute(tilesetElement, 'name');
-        tileset.tileWidth = TilEdParser.parseNumberAttribute(tilesetElement, 'tilewidth');
-        tileset.tileHeight = TilEdParser.parseNumberAttribute(tilesetElement, 'tileheight');
-        tileset.spacing = TilEdParser.parseNumberAttribute(tilesetElement, 'spacing', 0);
-        tileset.margin = TilEdParser.parseNumberAttribute(tilesetElement, 'margin', 0);
-        tileset.tileCount = TilEdParser.parseNumberAttribute(tilesetElement, 'tilecount');
-        tileset.columns = TilEdParser.parseNumberAttribute(tilesetElement, 'columns');
+        tileset.name = TiledParser.parseStringAttribute(tilesetElement, 'name');
+        tileset.tileWidth = TiledParser.parseNumberAttribute(tilesetElement, 'tilewidth');
+        tileset.tileHeight = TiledParser.parseNumberAttribute(tilesetElement, 'tileheight');
+        tileset.spacing = TiledParser.parseNumberAttribute(tilesetElement, 'spacing', 0);
+        tileset.margin = TiledParser.parseNumberAttribute(tilesetElement, 'margin', 0);
+        tileset.tileCount = TiledParser.parseNumberAttribute(tilesetElement, 'tilecount');
+        tileset.columns = TiledParser.parseNumberAttribute(tilesetElement, 'columns');
         tileset.image = this.parseTilesetImage(tilesetElement.children.item(0), rootUrl, scene);
         tileset.tiles = this.parseTilesetTiles(tilesetElement.getElementsByTagName('tile'), rootUrl, scene);
 
@@ -109,7 +109,7 @@ export class TilEdParser {
         if (element && element.tagName == 'image') {
             if (element) {
                 const texture = new Texture(
-                    new URL(TilEdParser.parseStringAttribute(element, 'source'), rootUrl).toString(),
+                    new URL(TiledParser.parseStringAttribute(element, 'source'), rootUrl).toString(),
                     scene,
                     true,
                     false,
@@ -124,13 +124,13 @@ export class TilEdParser {
         return undefined;
     }
 
-    private parseTilesetTiles(tileElements: HTMLCollection, rootUrl: URL, scene: Scene) : TilEdTilesetTile[] | undefined {
-        const tiles: TilEdTilesetTile[] = [];
+    private parseTilesetTiles(tileElements: HTMLCollection, rootUrl: URL, scene: Scene) : TiledTilesetTile[] | undefined {
+        const tiles: TiledTilesetTile[] = [];
         for (let i = 0; i < tileElements.length; i++) {
             const tileElement = tileElements.item(i);
             if (tileElement) {
-                const tile = new TilEdTilesetTile();
-                tile.id = TilEdParser.parseNumberAttribute(tileElement, 'id');
+                const tile = new TiledTilesetTile();
+                tile.id = TiledParser.parseNumberAttribute(tileElement, 'id');
                 tile.image = this.parseTilesetImage(tileElement.children.item(0), rootUrl, scene); 
 
                 tiles.push(tile);
@@ -144,8 +144,8 @@ export class TilEdParser {
         return tiles;
     }
 
-    private parseLayers(mapElement: HTMLElement): TilEdLayer[] {
-        const layers: TilEdLayer[] = [];
+    private parseLayers(mapElement: HTMLElement): TiledLayer[] {
+        const layers: TiledLayer[] = [];
         const layerElements = mapElement.getElementsByTagName('layer');
 
         if (layerElements) {
@@ -160,30 +160,30 @@ export class TilEdParser {
         return layers;
     }
     
-    private parseLayer(layerElement: Element): TilEdLayer {
-        const layer: TilEdLayer = new TilEdLayer();
+    private parseLayer(layerElement: Element): TiledLayer {
+        const layer: TiledLayer = new TiledLayer();
 
         // Parse the layer data
-        layer.name = TilEdParser.parseStringAttribute(layerElement, 'name');
-        layer.width = TilEdParser.parseNumberAttribute(layerElement, 'width');
-        layer.height = TilEdParser.parseNumberAttribute(layerElement, 'height');
-        layer.opacity = TilEdParser.parseNumberAttribute(layerElement, 'opacity', 1);
-        layer.visible = TilEdParser.parseBooleanAttribute(layerElement, 'visible', true);
-        layer.tintColor = TilEdParser.parseOptionalColor4Attribute(layerElement, 'tintColor');
-        layer.offsetX = TilEdParser.parseNumberAttribute(layerElement, 'offsetx', 0);
-        layer.offsetY = TilEdParser.parseNumberAttribute(layerElement, 'offsety', 0);
+        layer.name = TiledParser.parseStringAttribute(layerElement, 'name');
+        layer.width = TiledParser.parseNumberAttribute(layerElement, 'width');
+        layer.height = TiledParser.parseNumberAttribute(layerElement, 'height');
+        layer.opacity = TiledParser.parseNumberAttribute(layerElement, 'opacity', 1);
+        layer.visible = TiledParser.parseBooleanAttribute(layerElement, 'visible', true);
+        layer.tintColor = TiledParser.parseOptionalColor4Attribute(layerElement, 'tintColor');
+        layer.offsetX = TiledParser.parseNumberAttribute(layerElement, 'offsetx', 0);
+        layer.offsetY = TiledParser.parseNumberAttribute(layerElement, 'offsety', 0);
 
         // Read the layer data
         const dataElement = layerElement.getElementsByTagName('data').item(0);
         if (dataElement) {
-            layer.encoding = TilEdParser.parseStringAttribute(dataElement, 'encoding') as TilEdLayerEncoding;
+            layer.encoding = TiledParser.parseStringAttribute(dataElement, 'encoding') as TiledLayerEncoding;
             layer.data = this.parseLayerData(dataElement, layer.encoding);
         }
 
         return layer;
     }
 
-    private parseLayerData(dataElement: Element, encoding: TilEdLayerEncoding): number[] {
+    private parseLayerData(dataElement: Element, encoding: TiledLayerEncoding): number[] {
         if (encoding === 'csv') {
             return this.parseCsvLayerData(dataElement.textContent);
         } else if (encoding == 'base64') {
@@ -223,7 +223,7 @@ export class TilEdParser {
     }
 
     private static parseBooleanAttribute(element: Element, name: string, valueIfMissing: boolean) : boolean {
-        const number = TilEdParser.parseOptionalNumberAttribute(element, name);
+        const number = TiledParser.parseOptionalNumberAttribute(element, name);
 
         if (number === undefined) {
             return valueIfMissing;
@@ -254,7 +254,7 @@ export class TilEdParser {
     }
 
     private static parseNumberAttribute(element: Element, name: string, valueIfMissing?: number) : number {
-        let result = TilEdParser.parseOptionalNumberAttribute(element, name);
+        let result = TiledParser.parseOptionalNumberAttribute(element, name);
 
         if (result === undefined) {
             if (valueIfMissing === undefined) {

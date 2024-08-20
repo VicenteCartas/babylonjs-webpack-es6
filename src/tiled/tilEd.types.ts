@@ -1,28 +1,28 @@
-import { Color4, Texture, Vector2 } from "@babylonjs/core";
+import { Color4, IDisposable, Texture, Vector2 } from "@babylonjs/core";
 
-export type TilEdMapOrientation = 'orthogonal' | 'isometric' | 'staggered' | 'hexagonal';
-export type TilEdMapRenderOrder = 'right-down' | 'right-up' | 'left-down' | 'left-up';
-export type TilEdMapStaggerAxis = 'x' | 'y';
-export type TilEdMapStaggerIndex = 'even' | 'odd';
-export type TilEdLayerEncoding = 'csv' | 'base64';
+export type TiledMapOrientation = 'orthogonal' | 'isometric' | 'staggered' | 'hexagonal';
+export type TiledMapRenderOrder = 'right-down' | 'right-up' | 'left-down' | 'left-up';
+export type TiledMapStaggerAxis = 'x' | 'y';
+export type TiledMapStaggerIndex = 'even' | 'odd';
+export type TiledLayerEncoding = 'csv' | 'base64';
 
-export class TilEdMap {
+export class TiledMap {
     version: string = '';
     tiledVersion: string = '';
-    orientation: TilEdMapOrientation = 'orthogonal';
-    renderorder: TilEdMapRenderOrder = 'right-down';
+    orientation: TiledMapOrientation = 'orthogonal';
+    renderorder: TiledMapRenderOrder = 'right-down';
     height: number = 0;
     width: number = 0;
     tileHeight: number = 0;
     tileWidth: number = 0;
     hexSideLength?: number = undefined;
-    staggerAxis?: TilEdMapStaggerAxis = undefined;
-    staggerIndex?: TilEdMapStaggerIndex = undefined;
-    tilesets: TilEdTileset[] = [];
-    layers: TilEdLayer[] = [];
+    staggerAxis?: TiledMapStaggerAxis = undefined;
+    staggerIndex?: TiledMapStaggerIndex = undefined;
+    tilesets: TiledTileset[] = [];
+    layers: TiledLayer[] = [];
 }
 
-export class TilEdTileset {
+export class TiledTileset {
     firstgid: number = 0;
     name: string = '';
     tileWidth: number = 0;
@@ -32,16 +32,16 @@ export class TilEdTileset {
     tileCount: number = 0;
     columns: number = 0;
     image?: Texture;
-    tiles?: TilEdTilesetTile[];
+    tiles?: TiledTilesetTile[];
 }
 
 
-export class TilEdTilesetTile {
+export class TiledTilesetTile {
     id: number = 0;
     image?: Texture;
 }
 
-export class TilEdLayer {
+export class TiledLayer {
     name: string = '';
     width: number = 0;
     height: number = 0;
@@ -50,11 +50,11 @@ export class TilEdLayer {
     tintColor?: Color4;
     offsetX: number = 0;
     offsetY: number = 0;
-    encoding: TilEdLayerEncoding = 'csv';
+    encoding: TiledLayerEncoding = 'csv';
     data: number[] = [];
 }
 
-export interface ITilEdSpriteMap {
+export interface ISpriteMap2 extends IDisposable {
     getMapPixelSize(): Vector2;
     renderToTexture() : Promise<Texture>;
 }

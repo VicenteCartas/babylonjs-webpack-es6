@@ -1,11 +1,11 @@
 import { Engine, RawTexture, Scene, Texture, Vector, Vector2 } from "@babylonjs/core";
-import { ITilEdSpriteMap, TilEdMap } from "../tilEd.types";
+import { ISpriteMap2, TiledMap } from "../tiled.types";
 
-export class HexagonalPointTopSpriteMap implements ITilEdSpriteMap {
-    private _map: TilEdMap;
+export class HexagonalPointTopSpriteMap implements ISpriteMap2 {
+    private _map: TiledMap;
     private _scene: Scene;
 
-    constructor(map: TilEdMap, scene: Scene) {
+    constructor(map: TiledMap, scene: Scene) {
         this._map = map;
         this._scene = scene;
     }
@@ -24,5 +24,9 @@ export class HexagonalPointTopSpriteMap implements ITilEdSpriteMap {
 
     public async renderToTexture() : Promise<Texture> {
         throw new Error('Not implemented');
+    }
+
+    public dispose() : void {
+        // DISPOSE ALL TEXTURES FROM THE TILED MAP
     }
 }

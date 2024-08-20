@@ -1,27 +1,18 @@
-import { Engine, RawTexture, Scene, Texture, Vector, Vector2 } from "@babylonjs/core";
-import { ITilEdSpriteMap, TilEdLayer, TilEdMap, TilEdTileset } from "../tilEd.types";
+import { RawTexture, Scene, Texture, Vector, Vector2 } from "@babylonjs/core";
+import { TiledMap, TiledTileset } from "../tiled.types";
+import { BaseSpriteMap } from "./baseSpriteMap";
 
 // PARSING SHOULD READ THE TILES BUFFER DATA INTO MEMORY, SO WE DONT HAVE TO READ IT CONSTANTLY WHEN RENDERING THE MAP
 // OR WE SHOULD CACHE HERE THE TILE BUFFERS INSTEAD? DICTIONARY<TILEID, TILEBUFFER>
 
-export class OrthogonalSpriteMap implements ITilEdSpriteMap {
-    private _map: TilEdMap;
-    private _scene: Scene;
-    private _mapPixelSize: Vector2;
-    private _mapTexture: Texture | undefined;
+export class OrthogonalSpriteMap extends BaseSpriteMap {
+    constructor(map: TiledMap, scene: Scene) {
+        super(map, scene);
+    }
 
-    /** Auxiliar buffer to load tiles data when rendering the map */
-    private _tileBuffer: Uint8Array;
-
-    /** Buffer where we paint the map */
-    private _mapBuffer: Uint8Array;
-
-    constructor(map: TilEdMap, scene: Scene) {
-        this._map = map;
-        this._scene = scene;
-        this._mapPixelSize = this.getMapPixelSize();
-        this._tileBuffer = new Uint8Array(this._map.tileWidth * this._map.tileHeight * 4);
-        this._mapBuffer = new Uint8Array(this._mapPixelSize.x * this._mapPixelSize.y * 4)
+    public dispose() : void {
+        this._mapTexture?.dispose();
+        // DISPOSE ALL TEXTURES FROM THE TILED MAP
     }
 
     public getMapPixelSize(): Vector2 {
@@ -56,16 +47,13 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
             this._mapPixelSize.x,
             this._mapPixelSize.y,
             this._scene,
-            true,
+            false,
             true,
             Texture.NEAREST_NEAREST_MIPNEAREST);
-
+        this._mapTexture.hasAlpha = true;
+        this._mapTexture.name = "spritemapTexture";
+        
         return this._mapTexture;
-    }
-
-    public dispose() : void {
-        this._mapTexture?.dispose();
-        // DISPOSE ALL TEXTURES FROM THE TILED MAP
     }
 
     /** Updates a position on the map texture */
@@ -74,67 +62,30 @@ export class OrthogonalSpriteMap implements ITilEdSpriteMap {
         const mapYPx = mapY * this._map.tileWidth;
         const tileHeightPx = this._map.tileHeight;
         const tileWidthPx = this._map.tileWidth;
-        const mapHeightPx = this._mapPixelSize.y;
         const mapWidthPx = this._mapPixelSize.x;
 
         // Get the tile data
-        const tileset: TilEdTileset = this._findTilesetForTile(tileId);
+        const tileset: TiledTileset = this._findTilesetForTile(tileId);
         const tilePosition = tileId - tileset.firstgid;
         const tileTextureData = await this._getTilesetTextureData(tileset, tilePosition);
 
-        // Update the texture buffer with the tile buffer data
+        // Alpha blend the texture buffer data with the tile buffer data
         const offset = (mapXPx + mapYPx * mapWidthPx) * 4;
         for (let j = 0; j < tileHeightPx; j++) {
             for (let i = 0; i < tileWidthPx; i++) {
-                this._mapBuffer[offset + (i + mapWidthPx * j) * 4] = tileTextureData[(i + j * tileWidthPx) * 4];
-                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 1] = tileTextureData[(i + j * tileWidthPx) * 4 + 1];
-                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 2] = tileTextureData[(i + j * tileWidthPx) * 4 + 2];
-                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 3] = tileTextureData[(i + j * tileWidthPx) * 4 + 3];
+                const mapR = this._mapBuffer[offset + (i + mapWidthPx * j) * 4];
+                const mapG = this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 1];
+                const mapB = this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 2];
+                const tileR = tileTextureData[(i + j * tileWidthPx) * 4];
+                const tileG = tileTextureData[(i + j * tileWidthPx) * 4 + 1];
+                const tileB = tileTextureData[(i + j * tileWidthPx) * 4 + 2];
+                const alpha = tileTextureData[(i + j * tileWidthPx) * 4 + 3] / 255;
+                
+                this._mapBuffer[offset + (i + mapWidthPx * j) * 4] = mapR * (1 - alpha) + tileR * alpha;
+                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 1] = mapG * (1 - alpha) + tileG * alpha;
+                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 2] = mapB * (1 - alpha) + tileB * alpha;
+                this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 3] = Math.max(this._mapBuffer[offset + (i + mapWidthPx * j) * 4 + 3], tileTextureData[(i + j * tileWidthPx) * 4 + 3]);
             }
         }
-    }
-
-    /** Finds the tileset that this tile id depends on so we know which texture to use to render the tile*/
-    private _findTilesetForTile(tileId: number) : TilEdTileset {
-        const tileSet = this._map.tilesets[0];
-        for (let i = 0; i < this._map.tilesets.length - 1; i++) {
-            if (this._map.tilesets[i].firstgid < tileId &&
-                this._map.tilesets[i].firstgid > tileId) {
-                return this._map.tilesets[i];
-            }
-        }
-
-        return tileSet;
-    }
-
-    /** Gets the tile pixel data */
-    private _getTilesetTextureData(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
-        if (tileset.image !== undefined) {
-            return this._getSingleImageTilesetTileData(tileset, tileId);
-        } else if (tileset.tiles !== undefined && tileset.tiles.length > 0) {
-            return this._getMultipleImagesTilesetTileData(tileset, tileId);
-        } else {
-            throw new Error(`Invalid tileset: ${tileset.name}`);
-        }
-    }
-
-    private async _getSingleImageTilesetTileData(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
-        await tileset.image!.readPixels(
-            undefined,
-            undefined,
-            this._tileBuffer,
-            false,
-            false,
-            tileId % tileset.columns * this._map.tileWidth,
-            Math.floor(tileId / tileset.columns) * this._map.tileHeight,
-            this._map.tileWidth,
-            this._map.tileHeight);
-
-        return this._tileBuffer;
-    }
-
-    private async _getMultipleImagesTilesetTileData(tileset: TilEdTileset, tileId: number) : Promise<Uint8Array> {
-        await tileset.tiles![tileId].image!.readPixels(0, 0, this._tileBuffer);
-        return this._tileBuffer;
     }
 }

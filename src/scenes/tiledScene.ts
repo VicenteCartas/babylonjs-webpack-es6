@@ -8,8 +8,7 @@ import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
 
 import { CreateSceneClass } from "../createScene";
-import { TilEdImporter } from "../tiled/tilEdImporter";
-import { getTiledSpriteMap } from "../tiled/getTiledSpriteMap";
+import { loadSpriteMap } from "../tiled/loadSpriteMap";
 
 export class TilEdScene implements CreateSceneClass {
     createScene = async (
@@ -43,33 +42,13 @@ export class TilEdScene implements CreateSceneClass {
         //const light = new PointLight("Point", new Vector3(5, 10, 5), scene);
         //light.intensity = 0.7;
 
-        const importer = new TilEdImporter();
-        //const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/NewRenderingMap.tmx', scene);
-        const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/cityMap.tmx', scene);
-        //const map = await TilEdImporter.ImportMapAsync('http://localhost:8080/maps/worldMap.tmx', scene);
-        const spriteMap = getTiledSpriteMap(map, scene);
-        const size = spriteMap.getMapPixelSize();
-        const groundTexture = await spriteMap.renderToTexture();
+        // New SpriteMap rendering
+        //await loadSpriteMap('http://localhost:8080/maps/NewRenderingMap.tmx', scene);
+        //await loadSpriteMap('http://localhost:8080/maps/Transparencies.tmx', scene);
+        //await loadSpriteMap('http://localhost:8080/maps/cityMap.tmx', scene);
+        //await loadSpriteMap('http://localhost:8080/maps/worldMap.tmx', scene);
+        await loadSpriteMap('http://localhost:8080/maps/HexagonalMap.tmx', scene);
 
-        const mat = new StandardMaterial("");
-	    mat.diffuseTexture = groundTexture;
-
-        const f = new Vector4(0, 0, 1, 1); // front image = half the whole image along the width 
-        const b = new Vector4(0, 0, 1, 1); // back image = second half along the width
-        
-        const plane = MeshBuilder.CreatePlane("plane", { width: size.x, height: size.y, frontUVs: f, backUVs: b, sideOrientation: Mesh.FRONTSIDE});
-        plane.material = mat;
-
-        // // Our built-in 'ground' shape.
-        // var ground = MeshBuilder.CreateGround("ground", {width: size.x, height: size.y}, scene);
-        // let groundMaterial = new StandardMaterial("Ground Material", scene);
-        // //let groundTexture = new Texture('http://localhost:8080/maps/SimpleImage.png', scene);
-        // //groundMaterial.diffuseColor = Color3.Red();
-        // groundMaterial.diffuseTexture = groundTexture;
-        // ground.material = groundMaterial;
-
-
-        
         return scene;
     };
 }

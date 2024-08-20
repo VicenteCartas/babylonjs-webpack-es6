@@ -1,13 +1,13 @@
 import { Scene } from "@babylonjs/core";
-import { TilEdMap } from "./tilEd.types";
-import { TilEdParser } from "./tilEdParser";
+import { TiledMap } from "./tiled.types";
+import { TiledParser } from "./tiledParser";
 import { FileUtilities } from "./fileUtilities";
 
-export class TilEdImporter {
-    public static async ImportMapAsync(rootUrl: string, scene: Scene): Promise<TilEdMap> {
+export class TiledImporter {
+    public static async ImportMapAsync(rootUrl: string, scene: Scene): Promise<TiledMap> {
         const url = new URL(rootUrl);
         const mapData = await FileUtilities.requestFile(url);
-        const parser = new TilEdParser();
+        const parser = new TiledParser();
         const mapObject = await parser.parseMapData(mapData, url, scene);
         return mapObject;
     }
