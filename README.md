@@ -10,10 +10,10 @@ Currently implemented:
 - Support for inline and external tilesets
 - Support for single image and multi image tilesets
 - Support for any number of layers
-- Rendering of orthogonal maps
+- Rendering orthogonal maps
+- Rendering hexagonal maps
 
 Not implemented yet
-- Hexagonal maps - In progress
 - Isometric maps - In progress
 - Tile picking - Planned
 - Animations - Under investigation
