@@ -18,7 +18,7 @@ Not implemented yet
 - Tile picking - Planned
 - Animations - Under investigation
 - Advanced Tiled features (objects, compression...) - Under investigation
-- Using shaders for rendering the map - Not planned
+- Using shaders for rendering the map - Pending investigation
 
 Example:
 
