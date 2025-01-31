@@ -11,9 +11,10 @@ Currently implemented:
 - Support for single image and multi image tilesets
 - Support for any number of layers
 - Rendering orthogonal maps
-- Rendering hexagonal maps
+- Rendering hexagonal flat top maps
 
 Not implemented yet
+- Rendering hexagonal point top maps - In progress
 - Isometric maps - In progress
 - Tile picking - Planned
 - Animations - Under investigation
